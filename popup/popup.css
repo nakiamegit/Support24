@@ -110,3 +110,10 @@ h1 {
     top:135px;
     left:135px;
 }
+/****************************___buttonClose___****************************/
+#buttonClose {
+    position: absolute;
+
+    right: 0;
+    top: 0;
+}
