@@ -1,0 +1,112 @@
+body {
+    font-family: Georgia, serif;
+    font-size: 16px;
+    min-width:325px;
+    margin: 0;
+}
+
+h1 {
+    font-size: 18px;
+    text-align: center;
+}
+/****************************___Form___****************************/
+.myCheckbox, .myRadio {
+    text-align: left;
+    margin-left: 15px;
+}
+
+.myRadio{ margin-top: 25px; }
+.myCheckbox input { margin-top: 10px; }
+.image-icon {width: 18px; height: 18px;}
+
+/****************************___Button___****************************/
+.button {
+    position: relative;
+    border: 1px solid #000;
+    border-radius: 25px;
+    outline: none;
+    display: inline-block;
+    overflow: hidden;
+    text-align: center;
+    text-decoration: none;
+    text-transform: uppercase;
+    cursor: pointer;
+    font-size: 12px;
+    padding: 8px 8px;
+    color: #000;
+    background: transparent;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
+    margin: 12px;
+}
+
+.button span,
+.button i {
+    z-index: 2;
+}
+
+.button:active {
+    border-color: rgba(0, 0, 0, 0.1);
+}
+
+.button::before,
+.button::after {
+    content: "";
+    position: absolute;
+    transition: all 0.3s;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+}
+
+.button::before {
+    background: rgba(255, 255, 255, 0.3);
+}
+
+.button:active::before {
+    background: rgba(0, 0, 0, 0.1);
+}
+
+
+#button-2 i {
+    color: #9b59b6;
+}
+
+#button-2::before {
+    opacity: 0;
+    transform: scale(0.1, 0.1);
+}
+
+#button-2:hover::before {
+    opacity: 1;
+    transform: scale(1, 1);
+}
+
+.button i {
+    margin-right: 4px;
+}
+
+.button div {
+    margin: 24px;
+    text-align: center;
+}
+
+.button ul li {
+    list-style: none;
+    color: rgba(0, 0, 0, 0.7);
+    font-size: 16px;
+    font-weight: lighter;
+    font-family: Roboto;
+    margin-top: 6px;
+}
+/****************************___Image-support___****************************/
+.support {
+    position:absolute;
+
+    width:150px;
+    height: 125px;
+
+    top:135px;
+    left:135px;
+}

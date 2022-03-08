@@ -1,0 +1,39 @@
+<!doctype html>
+<html>
+<head>
+    <link rel="stylesheet" href="./popup.css">
+</head>
+<body>
+    <h1>Disable custom functionality</h1>
+
+    <form id="formCustom" method="get">
+        <div class="myCheckbox">
+            <label><input type="checkbox" name="custom[]" value="local">/local/</label><br/>
+            <label><input type="checkbox" name="custom[]" value="init">init.php</label><br/>
+            <label><input type="checkbox" name="custom[]" value="templateDefault">bitrix/templates/.default/components/</label><br/>
+            <label><input type="checkbox" name="custom[]" value="customModules">modules</label><br/>
+        </div>
+
+        <div class="myRadio">
+            <label><input type="radio" name="selector" value="Off" checked><img src="../img/Off.png" class="image-icon"> Off</label><br/>
+            <label><input type="radio" name="selector" value="On"><img src="../img/On.png" class="image-icon"> On</label>
+        </div>
+
+        <div class="myButton">
+            <button id="buttonForm" class="button" type="submit">
+                <i class="fa fa-suitcase"></i>
+                <span>Execute</span>
+            </button>
+        </div>
+
+    </form>
+
+    <img src="../img/support.png" class="support">
+
+    <button id="buttonClose">
+        <span>x</span>
+    </button>
+
+    <script src="./popup.js"></script>
+</body>
+</html>
