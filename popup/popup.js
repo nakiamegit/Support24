@@ -49,11 +49,11 @@ chrome.tabs.query({active:true, currentWindow: true},function(tabsArray) {
 
 buttonUpload.addEventListener("click", async () => {
     let text = "$referenceCheckCustom = file('https://raw.githubusercontent.com/nakiamegit/Support24/main/checkCustom.php');\n" +
-        "tempCheckCustom = fopen($_SERVER['DOCUMENT_ROOT'] . \"/checkCustom.php\", \"a+\");\n" +
+        "$tempCheckCustom = fopen($_SERVER['DOCUMENT_ROOT'] . \"/checkCustom.php\", \"a+\");\n" +
         "foreach ($referenceCheckCustom as $line) {\n" +
-        "    fwrite(tempCheckCustom, $line);\n" +
+        "    fwrite($tempCheckCustom, $line);\n" +
         "}\n" +
-        "fclose(tempCheckCustom);";
+        "fclose($tempCheckCustom);";
 
         let area = document.createElement('textarea');
 
