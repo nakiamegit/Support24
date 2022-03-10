@@ -12,6 +12,7 @@ chrome.tabs.query({active:true, currentWindow: true},function(tabsArray) {
     f.action = domainName[0] + '//' + domainName[2] + '/checkCustom.php';
 });
 
+
 //*********************[ Обновить активную вкладку после отправки формы ]*********************//
 let buttonForm = document.getElementById("buttonForm");
 buttonForm.addEventListener("click", async () => {
@@ -34,17 +35,44 @@ buttonClose.addEventListener("click", async () => {
     window.close();
 });
 
-//####  *  ####  *  ####    Архив   ####  *  ####  *  ####//
-//*********************[ Проверить нажата ли кнопка (1) ]*********************//
-// let buttonClose = document.getElementById("test");
-// if (buttonClose) {
-//     buttonClose.onclick = function() {}
-// };
+//*********************[ Загрузить checkCustom.php ]*********************//
+let buttonUpload = document.getElementById("uploadCheckCustom");
 
-// async function getCurrentTab() {
-//     let queryOptions = { active: true, currentWindow: true };
-//     let [tab] = await chrome.tabs.query(queryOptions);
-//     return tab;
-// }
-// a = getCurrentTab();
-// console.log(a);
+chrome.tabs.query({active:true, currentWindow: true},function(tabsArray) {
+    let tab = tabsArray[0];
+    let tabUrl = tab.url;
+
+    let domainName = tabUrl.split('/');
+
+    buttonUpload.href = domainName[0] + '//' + domainName[2] + '/bitrix/admin/php_command_line.php';
+});
+
+buttonUpload.addEventListener("click", async () => {
+    let text = "$referenceCheckCustom = file('https://raw.githubusercontent.com/nakiamegit/Support24/main/checkCustom.php');\n" +
+        "tempCheckCustom = fopen($_SERVER['DOCUMENT_ROOT'] . \"/checkCustom.php\", \"a+\");\n" +
+        "foreach ($referenceCheckCustom as $line) {\n" +
+        "    fwrite(tempCheckCustom, $line);\n" +
+        "}\n" +
+        "fclose(tempCheckCustom);";
+
+        let area = document.createElement('textarea');
+
+        document.body.appendChild(area);
+        area.value = text;
+        area.select();
+        document.execCommand("copy");
+        document.body.removeChild(area);
+
+});
+
+//*********************[ Удалить checkCustom.php ]*********************//
+let buttonDelete = document.getElementById("deleteCheckCustom");
+
+chrome.tabs.query({active:true, currentWindow: true},function(tabsArray) {
+    let tab = tabsArray[0];
+    let tabUrl = tab.url;
+
+    let domainName = tabUrl.split('/');
+
+    buttonDelete.href = domainName[0] + '//' + domainName[2] + '/checkCustom.php?delFile=Y';
+});

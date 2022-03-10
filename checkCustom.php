@@ -13,13 +13,13 @@ class CheckCustom
             {
                 if (file_exists($dir . $externalFiles[$i]) && in_array($file, $externalFiles))
                 {
-                    //self::renameExternalFiles($dir, $file, $externalFiles[$i], $selector);
-
                     if ($selector === 'Off')  rename($dir . $file, $dir . '_' . $file);
                     if ($selector === 'On')  rename($dir . $file, $dir . substr($file, 1));
                     $i++;
                 }
             }
+            $log = fopen("checkCustom.txt", "a+");
+            $content = $selector. ': ' . json_encode($externalFiles, JSON_UNESCAPED_UNICODE) . PHP_EOL;
         }
     }
 
@@ -36,7 +36,7 @@ class CheckCustom
         if (in_array('init', $custom))
         {
             $selector == 'Off' ? $externalFiles = ['init.php'] : $externalFiles = ['_init.php'];
-            self::renameExternalFiles('./local/', $externalFiles, $selector);
+            self::renameExternalFiles('./local/php_interface/', $externalFiles, $selector);
             self::renameExternalFiles('./bitrix/php_interface/', $externalFiles, $selector);
             //echo 'init:'; print_r($externalFiles);echo '<br>';
         }
@@ -55,102 +55,29 @@ class CheckCustom
 
             if($selector === 'Off') {
                 foreach ($listModules as $module) {
-                    if (stristr($module, '.') && !is_file('./bitrix/modules/' . $module) && (substr($module, 0, 1) != '_') ) {
+                    if (stristr($module, '.') && !is_file('./bitrix/modules/' . $module) && substr($module, 0, 1) != '_' ) {
                         $externalFiles[] = $module;
                     }
                 }
             } else {
                 foreach ($listModules as $module) {
-                    if (stristr($module, '.') && !is_file('./bitrix/modules/_' . $module)) {
+                    if (stristr($module, '.') && !is_file('./bitrix/modules/' . $module) && substr($module, 0, 1) === '_') {
                         $externalFiles[] = $module;
                     }
                 }
             }
             $externalFiles = array_values(array_diff($externalFiles, array('..', '.')));
-            //echo 'customModules:'; print_r($externalFiles);echo '<br>';
+            // echo 'customModules:'; print_r($externalFiles);echo '<br>';
 
             self::renameExternalFiles('./bitrix/modules/', $externalFiles, $selector);
         }
     }
 }
 
-$custom = $_GET['custom'];
-$selector = $_GET['selector'];
+if(!empty($_GET['custom']) && !empty($_GET['selector'])) CheckCustom::getList($_GET['custom'], $_GET['selector']);
 
-if(!empty($custom) && !empty($selector)) CheckCustom::getList($custom, $selector);
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-####  *  ####  *  ####    Архив   ####  *  ####  *  ####
-# Проверка на существование файла/директории.
-/* public static function checkEntityExistence($existence): bool
- {
-     if(!is_array($existence)) {
-         return file_exists($existence);
-     } else {
-         foreach ($existence as $ex) {
-             return file_exists($ex);
-         }
-     }
- }*/
-
-/* public static function renameExternalFiles($dir, $file, $externalFiles, $selector)
- {
-
- }*/
-
-/*    public static function getList($custom, $selector)
+if(!empty($_GET['delFile']) && $_GET['delFile'] === 'Y')
 {
-    extract($custom);
-
-    switch (true)
-    {
-        case isset($local):
-            $selector == 'Off' ? $externalFiles = ['local'] : $externalFiles = ['_local'];
-            self::renameExternalFiles('./', $externalFiles, $selector);
-
-        case isset($init):
-            $selector == 'Off' ? $externalFiles = ['init.php'] : $externalFiles = ['_init.php'];
-            self::renameExternalFiles('./local/', $externalFiles, $selector);
-            self::renameExternalFiles('./bitrix/php_interface/', $externalFiles, $selector);
-
-        case isset($bitrix):
-            $selector == 'Off' ? $externalFiles = ['bitrix'] : $externalFiles = ['_bitrix'];
-            self::renameExternalFiles('./bitrix/templates/.default/components/', $externalFiles, $selector);
-
-        case isset($customModules):
-            $listModules = scandir('./bitrix/modules/');
-
-            if($selector == 'Off') {
-                foreach ($listModules as $module) {
-                    if (stristr($module, '.') && !is_file('./bitrix/modules/' . $module) && (substr($module, 0, 1) != '_') ) {
-                        //$externalFiles[] = $module;
-                    }
-                }
-            } else {
-                foreach ($listModules as $module) {
-                    if (stristr($module, '.') && !is_file('./bitrix/modules/_' . $module)) {
-                        //$externalFiles[] = $module;
-                    }
-                }
-            }
-            $externalFiles = array_values(array_diff($externalFiles, array('..', '.')));
-            self::renameExternalFiles('./bitrix/modules/', $externalFiles, $selector);
-            break;
-    }*/
+    unlink('./checkCustom.php');
+    echo '<script>window.close()</script>';
+}
