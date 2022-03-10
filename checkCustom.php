@@ -18,8 +18,8 @@ class CheckCustom
                     $i++;
                 }
             }
-            $log = fopen("checkCustom.txt", "a+");
-            $content = $selector. ': ' . json_encode($externalFiles, JSON_UNESCAPED_UNICODE) . PHP_EOL;
+//            $log = fopen("checkCustom.txt", "a+");
+//            $content = $selector. ': ' . json_encode($externalFiles, JSON_UNESCAPED_UNICODE) . PHP_EOL;
         }
     }
 
