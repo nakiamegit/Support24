@@ -1,119 +1,269 @@
-body {
-    font-family: Georgia, serif;
-    font-size: 16px;
-    min-width:325px;
-    margin: 0;
-}
+html, body { margin: 0; padding: 0;}
 
-h1 {
-    font-size: 18px;
-    text-align: center;
+/***************************[ Layout ]****************************/
+.container {
+    margin: 0;padding: 0;
+    min-width: 350px; max-width: 350px;
+    min-height: 450px; max-height: 450px;
+    background-image: url('../img/background.png'); background-size: 350px 450px;
+    font-family: Comic Sans MS, cursive; font-size: 16px;
 }
-/****************************___Form___****************************/
-.myCheckbox, .myRadio {
-    text-align: left;
-    margin-left: 15px;
+    #conainer-1 {
+        display: flex; flex-wrap: wrap;
+        width: 350px; height: 220px;
+        margin:0; padding:0;
+    }
+        #leftSidebar {
+            /*border: solid 1px black;*/
+            float:left;
+            width: 90px; height: 220px;
+        }
+        #rightSidebar {
+            float:right;
+            width: 258px; height: 220px;
+        }
+            #title{
+                /*border: solid 1px black;*/
+                float:left;
+                width:100%; height:80px;
+            }
+            #checkboxesCustom {
+                /*border: solid 1px black;*/
+                position:relative; float:left;
+                height:140px; width:100%;
+                z-index: 2;
+            }
+    .conainer-2 {
+        display: flex; flex-wrap: wrap;
+        width: 350px; height: 230px;
+        margin:0; padding:0;
+    }
+        .buttonsForms {
+            /*border: solid 1px black;*/
+            width:100%; height: 84px;
+        }
+            .buttonCustom {
+                /*border: solid 1px black;*/
+                float: right;
+                width:200px; height: 70px;
+            }
+            .radioCustom {
+                /*border: solid 1px black;*/
+                float: left;
+                width:100px; height: 70px;
+            }
+        #additionalButtons {
+            /*border: solid 1px black;*/
+            border-top: solid 1px rgb(144, 212, 235);
+            border-bottom: solid 1px rgb(144, 212, 235);
+            width:280px; height: 50px;
+        }
+            #buttonUpload {
+                /*border: solid 1px black;*/
+                float: left;
+                width: 92px; height: 50px;
+            }
+            #buttonDelete {
+                /*border: solid 1px black;*/
+                float: left;
+                width: 92px; height: 50px;
+            }
+            #buttonListCustom {
+                /*border: solid 1px black;*/
+                margin-left: 188px;
+                width: 92px; height: 50px;
+            }
+        #workArea {
+            /*border: solid 1px black;*/
+            width:230px; height: 95px;
+        }
+            #additionalButtons2 {
+                /*border: solid 1px black; */
+                display: inline-block;
+                width:230px; height: 40px;
+            }
+            #notifications {
+                /*border: solid 1px black; */
+                display: inline-block;
+                width:230px; height: 40px;
+                margin-top: 6px; margin-left: 6px;
+            }
+                #notifyDisabledCustom {
+                    /*border: solid 1px black; */
+                    display: inline-block;
+                    width:230px; height: 18px;
+                }
+                #notifyIsFileCustom {
+                    /*border: solid 1px black; */
+                    display: inline-block;
+                    width:230px; height: 18px;
+                }
+
+/***************************[ Icon size ]****************************/
+.icon-16 {width: 16px; height: 16px;}
+.icon-18 {width: 18px; height: 18px;}
+.icon-22 {width: 22px; height: 22px;}
+.icon-38 {width: 38px; height: 38px;}
+.icon-radio {width: 38px; height: 35px;}
+
+/***************************[ Logo ]****************************/
+.logo {
+    position: relative; display: block;
+    margin-top: 25%; margin-left: 5%;
+    width: 80px;
 }
-
-.myRadio{ margin-top: 25px; }
-.myCheckbox input { margin-top: 10px; }
-.image-icon {width: 18px; height: 18px;}
-
-/****************************___Button___****************************/
-.button {
-    position: relative;
-    border: 1px solid #000;
-    border-radius: 25px;
-    outline: none;
-    display: inline-block;
-    overflow: hidden;
-    text-align: center;
-    text-decoration: none;
-    text-transform: uppercase;
-    cursor: pointer;
-    font-size: 12px;
-    padding: 8px 8px;
-    color: #000;
-    background: transparent;
-    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-    margin: 12px;
-}
-
-.button span,
-.button i {
-    z-index: 2;
-}
-
-.button:active {
-    border-color: rgba(0, 0, 0, 0.1);
-}
-
-.button::before,
-.button::after {
-    content: "";
+#title .icon-logo {
     position: absolute;
-    transition: all 0.3s;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
+    top: -100px; left: 78px;
+    width: 280px; height: 280px;
     z-index: 1;
 }
 
-.button::before {
-    background: rgba(255, 255, 255, 0.3);
+/***************************[ Form Button ]****************************/
+.button {
+    position: relative; display: inline-block;
+    margin-left: 40px; padding: 10px 25px;
+    width: 130px; height: 40px;
+    font-family: Comic Sans MS, cursive; font-weight: 500;
+    color: #fff;
+    background: transparent;
+    transition: all 0.3s ease; cursor: pointer; outline: none;
+    border-radius: 5px;
+    box-shadow:inset 2px 2px 2px 0px rgba(255,255,255,.5),
+    7px 7px 20px 0px rgba(0,0,0,.1),
+    4px 4px 5px 0px rgba(0,0,0,.1);
+}
+#buttonForm {
+    padding: 0;
+    border: none; line-height: 42px;
+    background-color: #f0ecfc;  /*мигает при наведении*/
+    background-image: linear-gradient(315deg, #bedcf0 0%, #69b4dc 74%);
+}
+#buttonForm span {
+    position: relative; display: block;
+    width: 100%; height: 100%;
+}
+#buttonForm:before,
+#buttonForm:after {
+    position: absolute;
+    content: "";
+    right: 0; bottom: 0;
+    background: #69b4dc; /*botton line*/
+    transition: all 0.3s ease;
+    color: #69b4dc;
+}
+#buttonForm:before { width: 2px; height: 0%; }
+#buttonForm:after { width: 0; height: 2px; }
+#buttonForm:hover:before { height: 100%; }
+#buttonForm:hover:after { width: 100%; }
+#buttonForm:hover{ background: transparent; }
+#buttonForm span:hover{ color: #69b4dc; background: none;/*text afte hover*/}
+#buttonForm span:before,
+#buttonForm span:after {
+    position: absolute;
+    content: "";
+    top: 0; left: 0;
+    background: #69b4dc; /* top line */
+    transition: all 0.3s ease;
+}
+#buttonForm span:before { width: 2px; height: 0%; }
+#buttonForm span:after { width: 0; height: 2px; }
+#buttonForm span:hover:before { height: 100%; }
+#buttonForm span:hover:after { width: 100%; }
+
+/****************************[ Close button ]****************************/
+#buttonClose {
+    position: absolute; display: block;
+    right: 0; top: 0; padding: 0;
+    border: none;  cursor: pointer; z-index: 2;
+    font: inherit; color: inherit; background-color: transparent;
 }
 
-.button:active::before {
-    background: rgba(0, 0, 0, 0.1);
+/****************************[ Radio button ]****************************/
+.radioCustomItem > input { display: none; }
+.radioCustomItem { margin-top: 4px; margin-left: 74px; width: 40px;}
+
+    /****************************[ Checkbox ]****************************/
+.checkboxCustom {
+    padding-left: 10px;padding-bottom: 10px;padding-top: 15px;
+    font-size: 14px;
 }
-
-
-#button-2 i {
-    color: #9b59b6;
-}
-
-#button-2::before {
-    opacity: 0;
-    transform: scale(0.1, 0.1);
-}
-
-#button-2:hover::before {
-    opacity: 1;
-    transform: scale(1, 1);
-}
-
-.button i {
+.checkbox-outer {
+    width: 16px;
+    height: 16px;
+    display: block;
+    position: relative;
+    float: left;
+    margin-left: 1px;
     margin-right: 4px;
 }
-
-.button div {
-    margin: 24px;
-    text-align: center;
-}
-
-.button ul li {
-    list-style: none;
-    color: rgba(0, 0, 0, 0.7);
-    font-size: 16px;
-    font-weight: lighter;
-    font-family: Roboto;
-    margin-top: 6px;
-}
-/****************************___Image-support___****************************/
-.support {
-    position:absolute;
-
-    width:150px;
-    height: 125px;
-
-    top:135px;
-    left:135px;
-}
-/****************************___buttonClose___****************************/
-#buttonClose {
+.checkbox-outer input[type="checkbox"] {
+    margin: 0;
+    padding: 0;}
+.checkbox-pic {
     position: absolute;
-
-    right: 0;
-    top: 0;
+    left: 0;
+    top: 0px;
+    width: 18px;
+    height: 18px;
+    cursor: pointer;
+    display: block;
+    background: url('../img/notCheked.svg') white 0 0 no-repeat;
 }
+.checkbox-pic:before {
+    content: " ";
+    width: 18px;
+    height: 18px;
+    display: block;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    background: url('../img/cheked.svg') top left no-repeat;
+    opacity: 0;
+    transform: scale(3) rotateZ(-20deg);
+    -moz-transform: scale(3) rotateZ(-20deg);
+    -o-transform: scale(3) rotateZ(-20deg);
+    -webkit-transform: scale(3) rotateZ(-20deg);
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -ms-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;    z-index: -1;
+}
+.checkbox-outer input[type="checkbox"]:checked + .checkbox-pic:before {
+    opacity: 1;
+    transform: scale(1) rotateZ(0deg);
+    -moz-transform: scale(1) rotateZ(0deg);
+    -webkit-transform: scale(1) rotateZ(0deg);
+    -o-transform: scale(1) rotateZ(0deg);
+    -ms-transform: scale(1) rotateZ(0deg);
+    -webkit-transition: all 0.5s ease;
+    -moz-transition: all 0.5s ease;
+    -ms-transition: all 0.5s ease;
+    -o-transition: all 0.5s ease;
+    transition: all 0.5s ease;
+    z-index: 1;
+}
+.text {
+    display: block;
+    position: absolute;
+    left: 25px;
+    top: 0px;
+    width: 220px;
+
+}
+#textLocal {width: 40px;}
+#textInit {width: 155px;}
+#textTemplateDefault {width: 220px;}
+#textCustomModules {width: 130px;}
+
+/****************************[ Additional buttons ]****************************/
+#additionalButtons img {
+    /*display: block;*/
+    margin-left: 26px; margin-right: 26px;margin-top: 6px; margin-bottom: 6px;
+}
+.static { display: block;} .static:hover { display: none; }
+.dynamic { display: none;} .static:hover + .dynamic { display: block; }
+
+#notifyIsFileCustom { display: none; }
+#notifyDisabledCustom { display: none; }

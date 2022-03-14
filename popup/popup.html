@@ -1,41 +1,118 @@
 <!doctype html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>Document</title>
     <link rel="stylesheet" href="./popup.css">
+
 </head>
 <body>
-    <h1>Disable custom functionality</h1>
-
+<div class="container">
     <form id="formCustom" method="get">
-        <div class="myCheckbox">
-            <label><input type="checkbox" name="custom[]" value="local">/local/</label><br/>
-            <label><input type="checkbox" name="custom[]" value="init">init.php</label><br/>
-            <label><input type="checkbox" name="custom[]" value="templateDefault">bitrix/templates/.default/components/</label><br/>
-            <label><input type="checkbox" name="custom[]" value="customModules">modules</label><br/>
+        <div id="conainer-1">
+            <div id="leftSidebar">
+               <div class="logoArea">
+                    <img src="../img/icon.png" class="logo">
+               </div>
+            </div>
+            <div id="rightSidebar">
+                <div id="title">
+                    <img src="../img/title.png" class="icon-logo">
+                    <button id="buttonClose">
+                        <img src="../img/close.png" class="icon-18">
+                    </button>
+                </div>
+                <div id="checkboxesCustom">
+                    <div class="checkboxCustom">
+                        <label class="checkbox-outer" for="checkboxCustom-1" title="">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-1" value="local">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textLocal">/local/</span>
+                        </label>
+                    </div>
+                    <div class="checkboxCustom">
+                        <label class="checkbox-outer" for="checkboxCustom-2" title="/bitrix/php_interface/init.php и /local/php_interface/init.php">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-2" value="init">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textInit">Обработчики событий</span>
+                        </label>
+                    </div>
+                    <div class="checkboxCustom">
+                        <label class="checkbox-outer" for="checkboxCustom-3" title="/bitrix/templates/.default/components/">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-3" value="templateDefault">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textTemplateDefault">Компоненты шаблона ".default"</span>
+                        </label>
+                    </div>
+                    <div class="checkboxCustom">
+                        <label class="checkbox-outer" for="checkboxCustom-4" title="/bitrix/modules/%.%">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-4" value="customModules">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textCustomModules">Сторонние модули</span>
+                        </label>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="myRadio">
-            <label><input type="radio" name="selector" value="Off" checked><img src="../img/Off.png" class="image-icon"> Off</label><br/>
-            <label><input type="radio" name="selector" value="On"><img src="../img/On.png" class="image-icon"> On</label>
+        <div class="conainer-2">
+            <div class="buttonsForms">
+                <div class="radioCustom">
+                    <div class="radioCustomItem" id="radioCustomItem-1" title="Отключить">
+                        <input type="radio" name="selector" id="fidRadioCustom-1" value="Off" checked>
+                        <img src="../img/off.png" class="icon-radio">
+                        <label for="fidRadioCustom-1"></label>
+                    </div>
+                    <div class="radioCustomItem" id="radioCustomItem-2" title="Включить" hidden>
+                        <input type="radio" name="selector" id="fidRadioCustom-2" value="On">
+                        <img src="../img/on.png" class="icon-radio">
+                        <label for="fidRadioCustom-2"></label>
+                    </div>
+                </div>
+                <div class="buttonCustom">
+                    <button id="buttonForm" class="button" type="submit">
+                        <span>Выполнить</span>
+                    </button>
+                </div>
+            </div>
+            <div id="additionalButtons">
+                <div id="buttonUpload">
+                    <a href="" id="uploadCheckCustom" target="_blank" title="Загрузить файл проверки">
+                        <img src="../img/upload.png" class="icon-38 static">
+                        <img src="../img/upload.gif" class="icon-38 dynamic">
+                    </a>
+                </div>
+                <div id="buttonDelete">
+                    <a href="" id="deleteCheckCustom" target="_blank" title="Удалить файл проверки">
+                        <img src="../img/delete.png" class="icon-38 static">
+                        <img src="../img/delete.gif" class="icon-38 dynamic">
+                    </a>
+                </div>
+                <div id="buttonListCustom">
+                    <a href="" id="getListCustom" target="_blank" title="Получить список сторонних модулей">
+                        <img src="../img/list.png" class="icon-38">
+                    </a>
+                </div>
+            </div>
+            <div id="workArea">
+                <div id="additionalButtons2">
+                </div>
+                <div id="notifications">
+                    <div id="notifyDisabledCustom">
+                        <img src="../img/checkCustom.png" class="icon-18 icon-notify" alt="">
+                        <span style="font-size: 12px; margin-bottom: 1px;">На сайтe отключен кастом</span>
+                    </div>
+                    <div id="notifyIsFileCustom">
+                        <img src="../img/checkFile.png" class="icon-18 icon-notify" alt="">
+                        <span style="font-size: 12px; margin-bottom: 1px;">На сайт загружен скрипт проверки</span>
+                    </div>
+                </div>
+            </div>
         </div>
-
-        <div class="myButton">
-            <button id="buttonForm" class="button" type="submit">
-                <i class="fa fa-suitcase"></i>
-                <span>Execute</span>
-            </button>
-        </div>
-
     </form>
-
-    <img src="../img/support.png" class="support">
-
-    <button id="buttonClose">
-        <span>x</span>
-    </button>
-    <a href="" id="uploadCheckCustom" target="_blank">Upload</a><br>
-    <a href="" id="deleteCheckCustom" target="_blank">Delete</a>
-
-    <script src="./popup.js"></script>
+</div>
+<script src="./popup.js"></script>
 </body>
 </html>
