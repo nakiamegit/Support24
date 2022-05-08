@@ -1,11 +1,11 @@
 html, body { margin: 0; padding: 0;}
 
 /***************************[ Layout ]****************************/
-.container {
+#container {
     margin: 0;padding: 0;
-    min-width: 350px; max-width: 350px;
-    min-height: 450px; max-height: 450px;
-    background-image: url('../img/background.png'); background-size: 350px 450px;
+    min-width: 355px; max-width: 355px;
+    min-height: 455px; max-height: 455px;
+    background-image: url('../img/background.png'); background-size: 355px 455px;
     font-family: Comic Sans MS, cursive; font-size: 16px;
 }
     #conainer-1 {
@@ -25,32 +25,32 @@ html, body { margin: 0; padding: 0;}
             #title{
                 /*border: solid 1px black;*/
                 float:left;
-                width:100%; height:80px;
+                width:100%; height:30px;
             }
             #checkboxesCustom {
                 /*border: solid 1px black;*/
                 position:relative; float:left;
-                height:140px; width:100%;
+                height:150px; width:100%;
                 z-index: 2;
             }
-    .conainer-2 {
+    #conainer-2 {
         display: flex; flex-wrap: wrap;
         width: 350px; height: 230px;
         margin:0; padding:0;
     }
-        .buttonsForms {
+        #divForms {
             /*border: solid 1px black;*/
             width:100%; height: 84px;
         }
-            .buttonCustom {
+            #buttonCustom {
                 /*border: solid 1px black;*/
                 float: right;
-                width:200px; height: 70px;
+                width:200px; height: 50px;
             }
-            .radioCustom {
+            #radioCustom {
                 /*border: solid 1px black;*/
                 float: left;
-                width:100px; height: 70px;
+                width:100px; height: 50px;
             }
         #additionalButtons {
             /*border: solid 1px black;*/
@@ -58,35 +58,47 @@ html, body { margin: 0; padding: 0;}
             border-bottom: solid 1px rgb(144, 212, 235);
             width:280px; height: 50px;
         }
-            #buttonUpload {
+            #divUpload {
                 /*border: solid 1px black;*/
                 float: left;
-                width: 92px; height: 50px;
+                width: 70px; height: 50px;
             }
-            #buttonDelete {
+            #divDelete {
                 /*border: solid 1px black;*/
                 float: left;
-                width: 92px; height: 50px;
+                width: 70px; height: 50px;
             }
-            #buttonListCustom {
+            #divGetLog {
                 /*border: solid 1px black;*/
-                margin-left: 188px;
-                width: 92px; height: 50px;
+                float: left;
+                width: 70px; height: 50px;
             }
-        #workArea {
+            #divRestoreTable {
+                /*border: solid 1px black;*/
+                margin-left: 210px;
+                width: 70px; height: 50px;
+                display: none;
+            }
+        #notifications {
             /*border: solid 1px black;*/
             width:230px; height: 95px;
+            margin-top: 5px; margin-left: 5px;
         }
-            #additionalButtons2 {
-                /*border: solid 1px black; */
-                display: inline-block;
-                width:230px; height: 40px;
+            #notifyModules {
+                width:230px; height: 46px;
             }
-            #notifications {
+                #notifyMissingMySQLi {
                 /*border: solid 1px black; */
                 display: inline-block;
-                width:230px; height: 40px;
-                margin-top: 6px; margin-left: 6px;
+                width:230px; height: 18px;
+            }
+                #notifyMissingZIP {
+                /*border: solid 1px black; */
+                display: inline-block;
+                width:230px; height: 18px;
+            }
+            #notifyActions {
+                width:230px; height: 46px;
             }
                 #notifyDisabledCustom {
                     /*border: solid 1px black; */
@@ -103,7 +115,7 @@ html, body { margin: 0; padding: 0;}
 .icon-16 {width: 16px; height: 16px;}
 .icon-18 {width: 18px; height: 18px;}
 .icon-22 {width: 22px; height: 22px;}
-.icon-38 {width: 38px; height: 38px;}
+.icon-34 {width: 34px; height: 34px;}
 .icon-radio {width: 38px; height: 35px;}
 
 /***************************[ Logo ]****************************/
@@ -117,6 +129,10 @@ html, body { margin: 0; padding: 0;}
     top: -100px; left: 78px;
     width: 280px; height: 280px;
     z-index: 1;
+}
+#formTitle {
+    margin: 5%;
+    font-size: 18px;
 }
 
 /***************************[ Form Button ]****************************/
@@ -177,6 +193,12 @@ html, body { margin: 0; padding: 0;}
     right: 0; top: 0; padding: 0;
     border: none;  cursor: pointer; z-index: 2;
     font: inherit; color: inherit; background-color: transparent;
+}
+
+/****************************[ Restore button ]****************************/
+#buttonRestoreTable {
+    font: inherit; color: inherit; background-color: transparent;
+    font-size: 12px; padding: 15px; text-decoration: none;
 }
 
 /****************************[ Radio button ]****************************/
@@ -265,6 +287,4 @@ html, body { margin: 0; padding: 0;}
 .static { display: block;} .static:hover { display: none; }
 .dynamic { display: none;} .static:hover + .dynamic { display: block; }
 
-#notifyIsFileCustom { display: none; }
-#notifyDisabledCustom { display: none; }
-#buttonListCustom { display: none; }
+#notifyIsFileCustom, #notifyDisabledCustom, #notifyMissingMySQLi, #notifyMissingZIP { display: none; }
