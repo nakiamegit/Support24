@@ -2,15 +2,12 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport"
-          content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
+    <meta name="viewport" content="width=device-width, user-scalable=no, initial-scale=1.0, maximum-scale=1.0, minimum-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
-    <title>Document</title>
     <link rel="stylesheet" href="./popup.css">
-
 </head>
 <body>
-<div class="container">
+<div id="container">
     <form id="formCustom" method="get">
         <div id="conainer-1">
             <div id="leftSidebar">
@@ -20,7 +17,8 @@
             </div>
             <div id="rightSidebar">
                 <div id="title">
-                    <img src="../img/title.png" class="icon-logo">
+                    <!--<img src="../img/title.png" class="icon-logo">-->
+                    <h1 id="formTitle">Параметры отключения:</h1>
                     <button id="buttonClose">
                         <img src="../img/close.png" class="icon-18">
                     </button>
@@ -28,23 +26,23 @@
                 <div id="checkboxesCustom">
                     <div class="checkboxCustom">
                         <label class="checkbox-outer" for="checkboxCustom-1" title="">
-                            <input type="checkbox" name="custom[]" id="checkboxCustom-1" value="local">
+                            <input type="checkbox" id="checkboxCustom-1">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textAll"></span>
+                        </label>
+                    </div>
+                    <div class="checkboxCustom">
+                        <label class="checkbox-outer" for="checkboxCustom-2" title="">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-2" value="local">
                             <span class="checkbox-pic"></span>
                             <span class="text" id="textLocal">/local/</span>
                         </label>
                     </div>
                     <div class="checkboxCustom">
-                        <label class="checkbox-outer" for="checkboxCustom-2" title="/bitrix/php_interface/init.php и /local/php_interface/init.php">
-                            <input type="checkbox" name="custom[]" id="checkboxCustom-2" value="init">
+                        <label class="checkbox-outer" for="checkboxCustom-3" title="/bitrix/php_interface/init.php и /local/php_interface/init.php">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-3" value="init">
                             <span class="checkbox-pic"></span>
                             <span class="text" id="textInit">Обработчики событий</span>
-                        </label>
-                    </div>
-                    <div class="checkboxCustom">
-                        <label class="checkbox-outer" for="checkboxCustom-3" title="/bitrix/templates/.default/components/">
-                            <input type="checkbox" name="custom[]" id="checkboxCustom-3" value="templateDefault">
-                            <span class="checkbox-pic"></span>
-                            <span class="text" id="textTemplateDefault">Компоненты шаблона ".default"</span>
                         </label>
                     </div>
                     <div class="checkboxCustom">
@@ -54,65 +52,93 @@
                             <span class="text" id="textCustomModules">Сторонние модули</span>
                         </label>
                     </div>
+                    <div class="checkboxCustom">
+                        <label class="checkbox-outer" for="checkboxCustom-5" title="/bitrix/templates/.default/components/">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-5" value="templateDefault">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textTemplateDefault">Компоненты шаблона ".default"</span>
+                        </label>
+                    </div>
+                    <div class="checkboxCustom">
+                        <label class="checkbox-outer" for="checkboxCustom-6" title="/bitrix/templates/.default/components/">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-6" value="templateBitrix24">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textTemplateBitrix24">Шаблон "Bitrix24"</span>
+                        </label>
+                    </div>
                 </div>
             </div>
         </div>
-        <div class="conainer-2">
-            <div class="buttonsForms">
-                <div class="radioCustom">
+        <div id="conainer-2">
+            <div id="divForms">
+                <div id="radioCustom">
                     <div class="radioCustomItem" id="radioCustomItem-1" title="Отключить">
-                        <input type="radio" name="selector" id="fidRadioCustom-1" value="Off" checked>
+                        <input type="radio" name="selector" id="fidRadioCustom-1" value="off" checked>
                         <img src="../img/off.png" class="icon-radio">
                         <label for="fidRadioCustom-1"></label>
                     </div>
                     <div class="radioCustomItem" id="radioCustomItem-2" title="Включить" hidden>
-                        <input type="radio" name="selector" id="fidRadioCustom-2" value="On">
+                        <input type="radio" name="selector" id="fidRadioCustom-2" value="on">
                         <img src="../img/on.png" class="icon-radio">
                         <label for="fidRadioCustom-2"></label>
                     </div>
                 </div>
-                <div class="buttonCustom">
+                <div id="buttonCustom">
                     <button id="buttonForm" class="button" type="submit">
                         <span>Выполнить</span>
                     </button>
                 </div>
             </div>
             <div id="additionalButtons">
-                <div id="buttonUpload">
+                <div id="divUpload">
                     <a href="" id="uploadCheckCustom" target="_blank" title="Загрузить файл проверки">
-                        <img src="../img/upload.png" class="icon-38 static">
-                        <img src="../img/upload.gif" class="icon-38 dynamic">
+                        <img src="../img/upload.png" class="icon-34 static">
+                        <img src="../img/upload.gif" class="icon-34 dynamic">
                     </a>
                 </div>
-                <div id="buttonDelete">
+                <div id="divDelete">
                     <a href="" id="deleteCheckCustom" target="_blank" title="Удалить файл проверки">
-                        <img src="../img/delete.png" class="icon-38 static">
-                        <img src="../img/delete.gif" class="icon-38 dynamic">
+                        <img src="../img/delete.png" class="icon-34 static">
+                        <img src="../img/delete.gif" class="icon-34 dynamic">
                     </a>
                 </div>
-                <div id="buttonListCustom">
-                    <a href="" id="getListCustom" target="_blank" title="Получить список сторонних модулей">
-                        <img src="../img/list.png" class="icon-38">
+                <div id="divGetLog">
+                    <a href="#" id="getLog" title="Открыть лог">
+                        <img src="../img/list.png" class="icon-34">
+                    </a>
+                </div>
+                <div id="divRestoreTable">
+                    <a href="" id="restoreTable" title="Восстановить b_module_to_module">
+                        <img src="../img/restore.png" class="icon-34 static">
+                        <img src="../img/restore.gif" class="icon-34 dynamic">
                     </a>
                 </div>
             </div>
-            <div id="workArea">
-                <div id="additionalButtons2">
+            <div id="notifications">
+                <div id="notifyModules">
+                    <div id="notifyMissingMySQLi">
+                        <img src="../img/checkModules.png" class="icon-16 icon-notify" alt="">
+                        <span style="font-size: 12px; margin-bottom: 1px;">Отключен модуль MySQLi</span>
+                    </div>
+                    <div id="notifyMissingZIP">
+                        <img src="../img/checkModules.png" class="icon-16 icon-notify" alt="">
+                        <span style="font-size: 12px; margin-bottom: 1px;">Отключен модуль ZIP</span>
+                    </div>
                 </div>
-                <div id="notifications">
+                <div id="notifyActions">
                     <div id="notifyDisabledCustom">
                         <img src="../img/checkCustom.png" class="icon-18 icon-notify" alt="">
-                        <span style="font-size: 12px; margin-bottom: 1px;">На сайтe отключен кастом</span>
+                        <span style="font-size: 12px; margin-bottom: 1px;">Отключен кастом</span>
                     </div>
                     <div id="notifyIsFileCustom">
                         <img src="../img/checkFile.png" class="icon-18 icon-notify" alt="">
-                        <span style="font-size: 12px; margin-bottom: 1px;">На сайт загружен скрипт проверки</span>
+                        <span style="font-size: 12px; margin-bottom: 1px;">Загружен файл проверки</span>
                     </div>
                 </div>
             </div>
         </div>
     </form>
 </div>
-<script src="./popup.js"></script>
+<script async src="./popup.js"></script>
 </body>
 </html>
