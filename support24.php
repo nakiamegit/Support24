@@ -580,10 +580,10 @@ if($_GET['delFile'] === 'Y')
 
     CheckCustom::backupTable("delete");
 
-    file_exists("./bitrix/modules/_bx_") ?? rmdir("./bitrix/modules/_bx_");
-    file_exists("./bitrix/templates/_bx_bitrix24.zip") ?? unlink("./bitrix/templates/_bx_bitrix24.zip");
-    file_exists("./logSupport24.txt") ?? unlink("./logSupport24.txt");
-    file_exists("./support24.php") ?? unlink("./support24.php");
+    if(file_exists("./bitrix/modules/_bx_")) rmdir("./bitrix/modules/_bx_");
+    if(file_exists("./bitrix/templates/_bx_bitrix24.zip")) unlink("./bitrix/templates/_bx_bitrix24.zip");
+    if(file_exists("./logSupport24.txt")) unlink("./logSupport24.txt");
+    if(file_exists("./support24.php")) unlink("./support24.php");
 }
 
 if($_GET['zip'] === 'Y' && !extension_loaded('zip'))
