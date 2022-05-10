@@ -292,12 +292,13 @@ class CheckCustom extends CheckTemplateBitrix24
                 break;
 
             case "delete":
-                $queryDeleteTable = "DROP TABLE IF EXISTS {$temptTable}";
-                self::queryDatabase($queryDeleteTable);
+                $queryDeleteTable = "DROP TABLE {$temptTable}";
 
-                $_SESSION['backupTable'] = NULL;
-
-                self::logSupport24("Delete table", $temptTable);
+                if(self::queryDatabase($queryDeleteTable) != false)
+                {
+                    $_SESSION['backupTable'] = NULL;
+                    self::logSupport24("Delete table", $temptTable);
+                }
                 break;
         }
     }
@@ -577,15 +578,12 @@ if($_GET['delFile'] === 'Y')
 {
     session_destroy();
 
-    if (file_exists("./bitrix/modules/_bx_")) rmdir("./bitrix/modules/_bx_");
-
     CheckCustom::backupTable("delete");
 
-    unlink("./bitrix/templates/_bx_bitrix24.zip");
-    unlink("./logSupport24.txt");
-    unlink("./support24.php");
-
-    echo '<script>window.close()</script>';
+    file_exists("./bitrix/modules/_bx_") ?? rmdir("./bitrix/modules/_bx_");
+    file_exists("./bitrix/templates/_bx_bitrix24.zip") ?? unlink("./bitrix/templates/_bx_bitrix24.zip");
+    file_exists("./logSupport24.txt") ?? unlink("./logSupport24.txt");
+    file_exists("./support24.php") ?? unlink("./support24.php");
 }
 
 if($_GET['zip'] === 'Y' && !extension_loaded('zip'))
