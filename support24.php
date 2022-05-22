@@ -116,7 +116,6 @@ class CheckTemplateBitrix24
             if($zip->addFile($file, mb_substr($file, 28)) !== true)
             {
                 CheckCustom::logSupport24("File {$file}", "failed to archive.");
-                # Остановил на первом файле, чтобы не забивать лог
                 return;
             }
         }
@@ -143,6 +142,44 @@ class CheckTemplateBitrix24
         $zip->close();
     }
 
+    protected static function openFileViaSockets(string $url):string
+    {
+        $arrURL = parse_url($url);
+
+        $port = $arrURL["port"] ?? "443";
+        $host = $arrURL["host"];
+        $query = $arrURL["path"] . $arrURL["query"];
+
+        $fp = fsockopen("ssl://{$host}", $port, $errno, $errstr, 1024);
+
+        if(!$fp)
+        {
+            return CheckCustom::logSupport24("Fsockopen - {$errno}", $errstr);
+        }
+
+        $request = "GET {$query} HTTP/1.1\r\n";
+        $request .= "Host:{$host}\r\n";
+        $request .= "Connection: close\r\n";
+        $request .= "\r\n";
+
+        fwrite($fp, $request);
+
+        $checkBody = false;
+        $body = "";
+
+        while(!feof($fp))
+        {
+            $line = fgets($fp, 1024);
+
+            if($checkBody) $body .= $line;
+            if ($line == "\r\n") $checkBody = true;
+        }
+
+        fclose($fp);
+
+        return $body;
+    }
+
     protected static function restore(array $lists):void
     {
         $exDir = $lists['compareStructure']['exist'];
@@ -161,19 +198,25 @@ class CheckTemplateBitrix24
         foreach ($files as $file)
         {
             $originalFile = "https://raw.githubusercontent.com/nakiamegit/templateBitrix24/main" . mb_substr($file, 18);
-
-            $checkStatus = get_headers($originalFile);
-
-            if($checkStatus[0] != "HTTP/1.1 200 OK")
-            {
-                CheckCustom::logSupport24("Recoverable file {$file}", "not found on the server.");
-                continue;
-            }
-
             $curlFile = fopen($file, 'w+');
 
             if(extension_loaded('curl'))
             {
+                $checkResource = curl_init($originalFile);
+
+                curl_setopt($checkResource, CURLOPT_NOBODY, true);
+                curl_exec($checkResource);
+
+                $checkStatus = curl_getinfo($checkResource, CURLINFO_HTTP_CODE);
+
+                curl_close($checkResource);
+
+                if($checkStatus != 200)
+                {
+                    CheckCustom::logSupport24("Recoverable file {$file}", "not found on the server.");
+                    continue;
+                }
+
                 $resource = curl_init($originalFile);
 
                 $options = array(
@@ -186,20 +229,39 @@ class CheckTemplateBitrix24
                 curl_setopt_array($resource, $options);
                 curl_exec($resource);
 
+                array_map(fn($line) => fwrite($curlFile, $line), $resource);
+
                 curl_close($resource);
+            }
+            elseif (ini_get('allow_url_fopen') != true)
+            {
+                if (@file_get_contents() === false)
+                {
+                    CheckCustom::logSupport24("Recoverable file {$file}", "not found on the server.");
+                    continue;
+                }
+
+                $resource = self::openFileViaSockets($originalFile);
+                file_put_contents($file, $resource);
             }
             else
             {
+                $checkStatus = get_headers($originalFile);
+
+                if($checkStatus[0] != "HTTP/1.1 200 OK")
+                {
+                    CheckCustom::logSupport24("Recoverable file {$file}", "not found on the server.");
+                    continue;
+                }
+
                 $resource = file($originalFile);
 
                 array_map(fn($line) => fwrite($curlFile, $line), $resource);
             }
-
             #CheckCustom::logSupport24("File {$file}", "restored successfully");
-
             fclose($curlFile);
         }
-        CheckCustom::logSupport24("Restore template Bitrix24", "success");
+        CheckCustom::logSupport24("Restore template Bitrix24", "completed");
     }
 }
 
@@ -404,6 +466,15 @@ class CheckCustom extends CheckTemplateBitrix24
     # Disable event handlers from an array extModules
     private static function disableEventHandlers(string $handlersID, string $selector): void
     {
+        $queryGetDataHandlers = "
+                            SELECT 
+                                TO_MODULE_ID, MESSAGE_ID
+                            FROM 
+                                b_module_to_module 
+                            WHERE 
+                                ID IN ('{$handlersID}')
+        ";
+
         switch ($selector)
         {
             case "off":
@@ -416,11 +487,12 @@ class CheckCustom extends CheckTemplateBitrix24
                                           ID IN ('{$handlersID}')
                 ";
 
+                $dataHandlers = self::queryDatabase($queryGetDataHandlers);
                 self::queryDatabase($queryDisableHandlers);
 
                 $_SESSION['offCustom'][] = "EventHandlers";
 
-                self::logSupport24("Disabled event handlers", $handlersID);
+                self::logSupport24("Disabled event handlers", $dataHandlers);
                 break;
 
             case "on":
@@ -433,10 +505,11 @@ class CheckCustom extends CheckTemplateBitrix24
                                           ID IN ('{$handlersID}')";
 
                 self::queryDatabase($queryDisableHandlers);
+                $dataHandlers = self::queryDatabase($queryGetDataHandlers);
 
                 $_SESSION['onCustom'][] = "EventHandlers";
 
-                self::logSupport24("Enabled event handlers", $handlersID);
+                self::logSupport24("Enabled event handlers", $dataHandlers);
                 break;
         }
     }
@@ -523,7 +596,14 @@ class CheckCustom extends CheckTemplateBitrix24
                 case "off":
                     $_SESSION['backupArchive'] ?? CheckTemplateBitrix24::createArchive($backup, $path);
 
-                    $originalTemplate = json_decode(file_get_contents("https://raw.githubusercontent.com/nakiamegit/templateBitrix24/main/originalTemplate.txt"), true);
+                    $resource = "https://raw.githubusercontent.com/nakiamegit/templateBitrix24/main/originalTemplate.txt";
+
+                    $originalTemplate = json_decode(file_get_contents($resource), true);
+                    if(ini_get('allow_url_fopen') != true)
+                    {
+                        $originalTemplate = json_decode(checkTemplateBitrix24::openFileViaSockets($resource), true);
+                    }
+
                     $curlTemplate = CheckTemplateBitrix24::recursiveScanDir($path);
 
                     $compare = CheckTemplateBitrix24::compare($originalTemplate, $curlTemplate);
