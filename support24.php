@@ -9,7 +9,7 @@ class CheckTemplateBitrix24
     {
         if(!file_exists($dir))
         {
-            self::logSupport24("Scanned path not found", $dir);
+            CheckCustom::logSupport24("Scanned path not found", $dir);
             die();
         }
 
@@ -83,7 +83,7 @@ class CheckTemplateBitrix24
         ];
     }
 
-    private static function removeDirectory(string $dir)
+    private static function removeDirectory(string $dir):void
     {
         if(file_exists($dir))
         {
@@ -94,7 +94,7 @@ class CheckTemplateBitrix24
                 (is_dir($dir.'/'.$file)) ? self::removeDirectory($dir.'/'.$file) : unlink($dir.'/'.$file);
             }
 
-            return rmdir($dir);
+            rmdir($dir);
         }
     }
 
@@ -147,18 +147,18 @@ class CheckTemplateBitrix24
         $arrURL = parse_url($url);
 
         $port = $arrURL["port"] ?? "443";
-        $host = $arrURL["host"];
         $query = $arrURL["path"] . $arrURL["query"];
 
-        $fp = fsockopen("ssl://{$host}", $port, $errno, $errstr, 1024);
+        $fp = fsockopen("ssl://{$arrURL["host"]}", $port, $errno, $errstr, 1024);
 
         if(!$fp)
         {
-            return CheckCustom::logSupport24("Fsockopen - {$errno}", $errstr);
+            CheckCustom::logSupport24("Fsockopen - {$errno}", $errstr);
+            die();
         }
 
         $request = "GET {$query} HTTP/1.1\r\n";
-        $request .= "Host:{$host}\r\n";
+        $request .= "Host:{$arrURL["host"]}\r\n";
         $request .= "Connection: close\r\n";
         $request .= "\r\n";
 
@@ -229,8 +229,6 @@ class CheckTemplateBitrix24
                 curl_setopt_array($resource, $options);
                 curl_exec($resource);
 
-                array_map(fn($line) => fwrite($curlFile, $line), $resource);
-
                 curl_close($resource);
             }
             elseif (ini_get('allow_url_fopen') != true)
@@ -275,7 +273,6 @@ class CheckCustom extends CheckTemplateBitrix24
         file_put_contents($fileLog, $log, FILE_APPEND);
     }
 
-    # Connecting to the database and executing a query
     private static function queryDatabase(string $query):array
     {
         $settings = include("./bitrix/.settings.php");
@@ -363,6 +360,18 @@ class CheckCustom extends CheckTemplateBitrix24
                 }
                 break;
         }
+    }
+
+    public static function removeTraces():void
+    {
+        session_destroy();
+
+        self::backupTable("delete");
+
+        if(file_exists("./bitrix/modules/_bx_")) rmdir("./bitrix/modules/_bx_");
+        if(file_exists("./bitrix/templates/_bx_bitrix24.zip")) unlink("./bitrix/templates/_bx_bitrix24.zip");
+        if(file_exists("./logSupport24.txt")) unlink("./logSupport24.txt");
+        if(file_exists("./support24.php")) unlink("./support24.php");
     }
 
     # Scanning directory and return all files or those in the filesList
@@ -463,12 +472,11 @@ class CheckCustom extends CheckTemplateBitrix24
         }
     }
 
-    # Disable event handlers from an array extModules
     private static function disableEventHandlers(string $handlersID, string $selector): void
     {
         $queryGetDataHandlers = "
                             SELECT 
-                                TO_MODULE_ID, MESSAGE_ID
+                                ID, TO_MODULE_ID, MESSAGE_ID
                             FROM 
                                 b_module_to_module 
                             WHERE 
@@ -629,6 +637,16 @@ if(!empty($_GET['custom']) && !empty($_GET['selector']))
     CheckCustom::operationsPerformer($_GET['custom'], $_GET['selector']);
 }
 
+if($_GET['backupTable'] === "restore")
+{
+    CheckCustom::backupTable("restore");
+}
+
+if($_GET['delFile'] === 'Y')
+{
+    CheckCustom::removeTraces();
+}
+
 if($_GET['checkDisabledCustom'] === 'Y')
 {
     if(empty($_SESSION['offCustom']))
@@ -644,26 +662,9 @@ if($_GET['checkDisabledCustom'] === 'Y')
     }
 }
 
-if($_GET['backupTable'] === "restore")
-{
-    CheckCustom::backupTable("restore");
-}
-
 if($_GET['checkBackupTable'] === 'Y')
 {
     empty($_SESSION['backupTable']) ? header("HTTP/1.1 404 Not Found") : print_r($_SESSION['backupTable']);
-}
-
-if($_GET['delFile'] === 'Y')
-{
-    session_destroy();
-
-    CheckCustom::backupTable("delete");
-
-    if(file_exists("./bitrix/modules/_bx_")) rmdir("./bitrix/modules/_bx_");
-    if(file_exists("./bitrix/templates/_bx_bitrix24.zip")) unlink("./bitrix/templates/_bx_bitrix24.zip");
-    if(file_exists("./logSupport24.txt")) unlink("./logSupport24.txt");
-    if(file_exists("./support24.php")) unlink("./support24.php");
 }
 
 if($_GET['zip'] === 'Y' && !extension_loaded('zip'))
