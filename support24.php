@@ -79,7 +79,7 @@ class CheckCustom
 
         if (!extension_loaded('mysqli'))
         {
-            self::logSupport24("Module mysqli not found", "extension will not be able to disable handlers in DB");
+            self::addLog("Module mysqli not found", "extension will not be able to disable handlers in DB");
             exit;
         }
 
@@ -652,7 +652,7 @@ class TemplateBitrix24 extends CheckCustom
             }
             elseif (ini_get('allow_url_fopen') != true)
             {
-                if (@file_get_contents() === false)
+                if (@file_get_contents($originalFile) === false)
                 {
                     CheckCustom::addLog("Recoverable file {$file}", "not found on the server.");
                     continue;
@@ -766,9 +766,8 @@ class SecureData extends CheckCustom
     public static function escapeInput(string $string):string
     {
         $newString = strip_tags($string);
-        $newString = htmlentities($string, ENT_QUOTES, 'UTF-8');
-        $newString = mysqli_real_escape_string(CheckCustom::getConnection(), $string);
+        $newString = htmlentities($newString, ENT_QUOTES, 'UTF-8');
 
-        return $newString;
+        return mysqli_real_escape_string(CheckCustom::getConnection(), $newString);
     }
 }
