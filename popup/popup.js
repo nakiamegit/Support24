@@ -29,8 +29,6 @@ chrome.tabs.query({active:true, currentWindow: true},function(tabsArray)
     let curlURL = tabUrl.split('/');
     let domainName =  curlURL[0] + '//' + curlURL[2] + '/';
 
-    console.log(curlURL[2]);
-
     formCustom.action = domainName + 'support24.php';
     formAuth.action = domainName + 'support24.php';
     buttonDelete.href =  domainName + 'support24.php?delFile=Y';
