@@ -1,6 +1,11 @@
 formCustom = document.getElementById('formCustom');
 buttonForm = document.getElementById("buttonForm");
 
+formAuth = document.getElementById('formAuth');
+buttonAuth = document.getElementById("buttonAuth");
+
+
+
 buttonDelete = document.getElementById("deleteCheckCustom");
 buttonUpload = document.getElementById("uploadCheckCustom");
 buttonLog = document.getElementById("getLog");
@@ -8,7 +13,9 @@ buttonRestoreTable  = document.getElementById('restoreTable');
 buttonClose = document.getElementById("buttonClose");
 buttonCheckboxAll = document.getElementById('checkboxCustom-1');
 
-divNotifyIsFileCustom = document.getElementById('notifyIsFileCustom');
+
+divContainer = document.getElementById('container');
+divNotifyIsFileRestore = document.getElementById('notifyIsFileRestore');
 divNotifyDisabledCustom = document.getElementById('notifyDisabledCustom');
 divRestoreTable = document.getElementById('divRestoreTable');
 divNotifyMissingMySQLi = document.getElementById('notifyMissingMySQLi');
@@ -22,7 +29,10 @@ chrome.tabs.query({active:true, currentWindow: true},function(tabsArray)
     let curlURL = tabUrl.split('/');
     let domainName =  curlURL[0] + '//' + curlURL[2] + '/';
 
+    console.log(curlURL[2]);
+
     formCustom.action = domainName + 'support24.php';
+    formAuth.action = domainName + 'support24.php';
     buttonDelete.href =  domainName + 'support24.php?delFile=Y';
     buttonUpload.href = domainName + 'bitrix/admin/php_command_line.php';
     buttonRestoreTable.href = domainName + 'support24.php?backupTable=restore';
@@ -37,7 +47,7 @@ chrome.tabs.query({active:true, currentWindow: true},function(tabsArray)
         open(domainName + 'logSupport24.txt?upd=' + (0|Math.random()*9e6).toString(36), 'Log', params);
     });
 
-    function checkIsFileCustom()
+    function checkAuth()
     {
         let xhr = new XMLHttpRequest();
 
@@ -47,8 +57,27 @@ chrome.tabs.query({active:true, currentWindow: true},function(tabsArray)
         xhr.onreadystatechange = function()
         {
             if (xhr.readyState != 4) { return }
-            if (xhr.status === 200) { divNotifyIsFileCustom.style.display = 'block'; }
-            else { divNotifyIsFileCustom.style.display = 'none'; }
+
+            if (xhr.status === 200) {
+                formCustom.style.display = 'block';
+            } else {
+                formAuth.style.display = 'block';
+            }
+        }
+    }
+
+    function checkIsFileRestore()
+    {
+        let xhr = new XMLHttpRequest();
+
+        xhr.open('GET', domainName + 'bitrix/bx_fmt.php',  true)
+        xhr.send()
+
+        xhr.onreadystatechange = function()
+        {
+            if (xhr.readyState != 4) { return }
+            if (xhr.status !== 200) { divNotifyIsFileRestore.style.display = 'block'; }
+            else { divNotifyIsFileRestore.style.display = 'none'; }
         }
     }
 
@@ -108,16 +137,25 @@ chrome.tabs.query({active:true, currentWindow: true},function(tabsArray)
         }
     }
 
-    setInterval(checkIsFileCustom, 1000);
+    checkAuth();
+    checkIsFileRestore();
+    checkMySQLi();
+    checkZIP();
+
+    checkDisabledCustom();
+    checkBackupTable();
+
     setInterval(checkDisabledCustom, 1000);
-    setInterval(checkBackupTable, 1000);
-    setInterval(checkMySQLi, 1000);
-    setInterval(checkZIP, 1000);
+    setInterval(checkBackupTable, 3000);
 });
 
 function reloadTab() {
     window.location.reload();
 }
+
+buttonAuth.addEventListener("click", async () => {
+    setInterval( function(){ reloadTab() }, 100 );
+});
 
 buttonForm.addEventListener("click", async () => {
     let [tab] = await chrome.tabs.query({ active: true, currentWindow: true });
@@ -144,6 +182,8 @@ buttonDelete.addEventListener("click", async () => {
         target: { tabId: tab.id },
         function: reloadTab,
     });
+
+    setInterval( function(){ reloadTab() }, 100 );
 });
 
 buttonClose.addEventListener("click", async () => {
@@ -207,7 +247,7 @@ divRadio2.onclick = function()
 
 buttonCheckboxAll.onclick = function()
 {
-    let el = ["checkboxCustom-2", "checkboxCustom-3", "checkboxCustom-4", "checkboxCustom-5", "checkboxCustom-6"];
+    let el = ["checkboxCustom-2", "checkboxCustom-3", "checkboxCustom-4", "checkboxCustom-5", "checkboxCustom-6", "checkboxCustom-7"];
 
     if (buttonCheckboxAll.checked == true)
     {
