@@ -1,26 +1,30 @@
 html, body { margin: 0; padding: 0;}
 
 /***************************[ Layout ]****************************/
+#notifyIsFileRestore, #notifyDisabledCustom,
+#notifyMissingMySQLi, #notifyMissingZIP,
+#formCustom, #formAuth { display: none; }
+
 #container {
     margin: 0;padding: 0;
-    min-width: 355px; max-width: 355px;
+    min-width: 340px; max-width: 340px;
     min-height: 455px; max-height: 455px;
     background-image: url('../img/background.png'); background-size: 355px 455px;
     font-family: Comic Sans MS, cursive; font-size: 16px;
 }
     #conainer-1 {
         display: flex; flex-wrap: wrap;
-        width: 350px; height: 220px;
+        width: 340px; height: 220px;
         margin:0; padding:0;
     }
         #leftSidebar {
             /*border: solid 1px black;*/
             float:left;
-            width: 90px; height: 220px;
+            width: 85px; height: 220px;
         }
         #rightSidebar {
             float:right;
-            width: 258px; height: 220px;
+            width: 250px; height: 220px;
         }
             #title{
                 /*border: solid 1px black;*/
@@ -30,17 +34,18 @@ html, body { margin: 0; padding: 0;}
             #checkboxesCustom {
                 /*border: solid 1px black;*/
                 position:relative; float:left;
-                height:150px; width:100%;
+                height:185px; width:100%;
                 z-index: 2;
             }
     #conainer-2 {
         display: flex; flex-wrap: wrap;
-        width: 350px; height: 230px;
+        width: 340px; height: 230px;
         margin:0; padding:0;
     }
         #divForms {
             /*border: solid 1px black;*/
-            width:100%; height: 84px;
+            width:100%; height: 70px;
+            margin-top: 14px;
         }
             #buttonCustom {
                 /*border: solid 1px black;*/
@@ -58,11 +63,6 @@ html, body { margin: 0; padding: 0;}
             border-bottom: solid 1px rgb(144, 212, 235);
             width:280px; height: 50px;
         }
-            #divUpload {
-                /*border: solid 1px black;*/
-                float: left;
-                width: 70px; height: 50px;
-            }
             #divDelete {
                 /*border: solid 1px black;*/
                 float: left;
@@ -75,13 +75,13 @@ html, body { margin: 0; padding: 0;}
             }
             #divRestoreTable {
                 /*border: solid 1px black;*/
-                margin-left: 210px;
+                float: left;
                 width: 70px; height: 50px;
-                display: none;
+                /*display: none;*/
             }
         #notifications {
             /*border: solid 1px black;*/
-            width:230px; height: 95px;
+            width:230px; height: 90px;
             margin-top: 5px; margin-left: 5px;
         }
             #notifyModules {
@@ -105,7 +105,7 @@ html, body { margin: 0; padding: 0;}
                     display: inline-block;
                     width:230px; height: 18px;
                 }
-                #notifyIsFileCustom {
+                #notifyIsFileRestore {
                     /*border: solid 1px black; */
                     display: inline-block;
                     width:230px; height: 18px;
@@ -287,4 +287,73 @@ html, body { margin: 0; padding: 0;}
 .static { display: block;} .static:hover { display: none; }
 .dynamic { display: none;} .static:hover + .dynamic { display: block; }
 
-#notifyIsFileCustom, #notifyDisabledCustom, #notifyMissingMySQLi, #notifyMissingZIP { display: none; }
+
+/****************************[ Sign in Form ]****************************/
+.signin {
+    position: absolute;
+    margin-left: 35px; margin-top: 200px;
+    height: 90px; width: 265px;
+    border-radius: 8px;
+}
+.signin::before {
+    display: block; position: relative;
+    height: 2px; top: 44px;
+    margin-left: 20px; z-index: 1;
+    background: rgb(105, 180, 220); content: '';
+}
+.signin input:first-of-type{
+    border-top-right-radius: 8px;
+    border-top-left-radius: 8px;
+}
+.signin input:last-of-type{
+    border-bottom-right-radius: 8px;
+    border-bottom-left-radius: 8px;
+}
+.signin  input[type="text"], .signin  input[type="password"], .signin button[type="submit"]{
+    box-shadow: inset -100px -100px 0 rgb(242, 250, 255);
+    color: rgb(52, 56, 61);
+}
+.signin  input[type="text"], .signin  input[type="password"]{
+    position: relative; display: block;
+    width: 245px; height: 45px;
+    top: -2px;
+    border: 0; outline: 0;
+    padding: 0 0 0 20px;
+    font-weight: 700;
+}
+
+.signin button[type="submit"]{
+    display: block; position: absolute;
+    width: 52px; height: 52px;
+    top: 19px; right: -24px;
+    z-index: 2; outline: 0;
+    padding-left: 9px; padding-bottom: 3px;
+    color: rgb(105, 180, 220);
+    border-radius: 50px; border: 6px solid rgb(105, 180, 220);
+    font-size: 25px; text-indent: 0px;
+    text-align: center;
+}
+.signin button[type="submit"]:hover{
+    color: rgb(0, 126, 165);
+    cursor: pointer;
+}
+.signin p {
+    margin: 5px 0 0 0; padding: 0 20px;
+    color: rgb(79, 85, 97);
+    font-weight: 700;
+    font-size: 12px;
+}
+.signin p > a{
+    color: rgb(242, 250, 255);
+    text-decoration: none;
+}
+.signin p > a:hover{
+    border-bottom: 1px solid;
+}
+
+
+#divUpload {
+    position: absolute;
+    margin-top: 120px; margin-left: -30px;
+    width: 50px; height: 40px;
+}
