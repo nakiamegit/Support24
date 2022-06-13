@@ -17,7 +17,6 @@
             </div>
             <div id="rightSidebar">
                 <div id="title">
-                    <!--<img src="../img/title.png" class="icon-logo">-->
                     <h1 id="formTitle">Параметры отключения:</h1>
                     <button id="buttonClose">
                         <img src="../img/close.png" class="icon-18">
@@ -45,23 +44,30 @@
                             <span class="text" id="textInit">Обработчики событий</span>
                         </label>
                     </div>
+                    <div class="checkboxCustom" style="font-size:12px; padding-left:40px;">
+                        <label class="checkbox-outer" for="checkboxCustom-4">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-4" value="eventHandlers">
+                            <span class="checkbox-pic"></span>
+                            <span class="text" id="textEventHandlers">в базе данных</span>
+                        </label>
+                    </div>
                     <div class="checkboxCustom">
-                        <label class="checkbox-outer" for="checkboxCustom-4" title="/bitrix/modules/%.%">
-                            <input type="checkbox" name="custom[]" id="checkboxCustom-4" value="customModules">
+                        <label class="checkbox-outer" for="checkboxCustom-5" title="/bitrix/modules/%.%">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-5" value="customModules">
                             <span class="checkbox-pic"></span>
                             <span class="text" id="textCustomModules">Сторонние модули</span>
                         </label>
                     </div>
                     <div class="checkboxCustom">
-                        <label class="checkbox-outer" for="checkboxCustom-5" title="/bitrix/templates/.default/components/">
-                            <input type="checkbox" name="custom[]" id="checkboxCustom-5" value="templateDefault">
+                        <label class="checkbox-outer" for="checkboxCustom-6" title="/bitrix/templates/.default/components/">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-6" value="templateDefault">
                             <span class="checkbox-pic"></span>
                             <span class="text" id="textTemplateDefault">Компоненты шаблона ".default"</span>
                         </label>
                     </div>
                     <div class="checkboxCustom">
-                        <label class="checkbox-outer" for="checkboxCustom-6" title="/bitrix/templates/.default/components/">
-                            <input type="checkbox" name="custom[]" id="checkboxCustom-6" value="templateBitrix24">
+                        <label class="checkbox-outer" for="checkboxCustom-7" title="/bitrix/templates/bitrix24/">
+                            <input type="checkbox" name="custom[]" id="checkboxCustom-7" value="templateBitrix24">
                             <span class="checkbox-pic"></span>
                             <span class="text" id="textTemplateBitrix24">Шаблон "Bitrix24"</span>
                         </label>
@@ -90,27 +96,21 @@
                 </div>
             </div>
             <div id="additionalButtons">
-                <div id="divUpload">
-                    <a href="" id="uploadCheckCustom" target="_blank" title="Загрузить файл проверки">
-                        <img src="../img/upload.png" class="icon-34 static">
-                        <img src="../img/upload.gif" class="icon-34 dynamic">
-                    </a>
-                </div>
-                <div id="divDelete">
-                    <a href="" id="deleteCheckCustom" title="Удалить файл проверки">
-                        <img src="../img/delete.png" class="icon-34 static">
-                        <img src="../img/delete.gif" class="icon-34 dynamic">
-                    </a>
-                </div>
                 <div id="divGetLog">
-                    <a href="#" id="getLog" title="Открыть лог">
+                    <a href="#" id="getLog" title="Открыть лог" rel="noopener noreferrer">
                         <img src="../img/list.png" class="icon-34">
                     </a>
                 </div>
                 <div id="divRestoreTable">
-                    <a href="" id="restoreTable" title="Восстановить b_module_to_module">
+                    <a href="" id="restoreTable" title="Восстановить b_module_to_module" rel="noopener noreferrer">
                         <img src="../img/restore.png" class="icon-34 static">
                         <img src="../img/restore.gif" class="icon-34 dynamic">
+                    </a>
+                </div>
+                <div id="divDelete">
+                    <a href="" id="deleteCheckCustom" title="Удалить файл проверки" rel="noopener noreferrer">
+                        <img src="../img/delete.png" class="icon-34 static">
+                        <img src="../img/delete.gif" class="icon-34 dynamic">
                     </a>
                 </div>
             </div>
@@ -130,14 +130,27 @@
                         <img src="../img/checkCustom.png" class="icon-18 icon-notify" alt="">
                         <span style="font-size: 12px; margin-bottom: 1px;">Отключен кастом</span>
                     </div>
-                    <div id="notifyIsFileCustom">
+                    <div id="notifyIsFileRestore">
                         <img src="../img/checkFile.png" class="icon-18 icon-notify" alt="">
-                        <span style="font-size: 12px; margin-bottom: 1px;">Загружен файл проверки</span>
+                        <span style="font-size: 12px; margin-bottom: 1px;">Отсутствует bx_fmt.php</span>
                     </div>
                 </div>
             </div>
         </div>
     </form>
+
+    <form id="formAuth" class="signin" action="" method="post">
+        <input type="text" id="user" name="login" placeholder="Имя пользователя" />
+        <input type="password" id="pass" name="password" placeholder="Пароль" />
+        <button type="submit" id="buttonAuth" >&#8883;</button>
+
+         <div id="divUpload">
+             <a href="" id="uploadCheckCustom" target="_blank" title="Загрузить файл проверки" rel="noopener noreferrer">
+                 <img src="../img/upload.png" class="icon-34">
+             </a>
+        </div>
+    </form>
+
 </div>
 <script async src="./popup.js"></script>
 </body>
