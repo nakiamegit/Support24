@@ -1,16 +1,435 @@
 <?php
+error_reporting(0);
 session_start();
 header("Access-Control-Allow-Origin: *");
 
-/********---[Classes]---********/
-class CheckTemplateBitrix24
+/*******-------*******[   Authentication  ]*******-------*******/
+/*if(!isset($_COOKIE['UNIQUE_ID']) && !empty($_POST['UNIQUE_ID']))
+{
+    setcookie("UNIQUE_ID", $_POST['UNIQUE_ID'], time()+3600);
+}*/
+if(!empty($_POST['login']) && !empty($_POST['password']))
+{
+    SecureData::auth($_POST['login'], $_POST['password']);
+}
+
+if (!isset($_COOKIE['hash']) || $_COOKIE['hash'] != md5($_COOKIE['login']))
+{
+    SecureData::checkAuth();
+}
+
+/*******-------*******[   Work area   ]*******-------*******/
+if(!empty($_GET['custom']) && !empty($_GET['selector']))
+{
+    CheckCustom::operationsPerformer($_GET['custom'], $_GET['selector']);
+}
+
+if($_GET['backupTable'] === "restore")
+{
+    CheckCustom::backupTable("restore");
+}
+
+if($_GET['delFile'] === 'Y')
+{
+    CheckCustom::removeTraces();
+}
+
+# Notifications
+if($_GET['checkDisabledCustom'] === 'Y')
+{
+    if(empty($_SESSION['offCustom']))
+    {
+        header("HTTP/1.1 404 Not Found");
+    }
+    elseif(!empty($_SESSION['onCustom']))
+    {
+        $_SESSION['offCustom'] = array_diff(array_unique($_SESSION['offCustom']), array_unique($_SESSION['onCustom']));
+        $_SESSION['onCustom'] = array();
+
+        print_r($_SESSION['offCustom']);
+    }
+}
+
+if($_GET['checkBackupTable'] === 'Y')
+{
+    empty($_SESSION['backupTable']) ? header("HTTP/1.1 404 Not Found") : print_r($_SESSION['backupTable']);
+}
+
+if($_GET['zip'] === 'Y' && !extension_loaded('zip'))
+{
+    header("HTTP/1.1 204 No Content");
+}
+
+if($_GET['mysqli'] === 'Y' && !extension_loaded('mysqli'))
+{
+    header("HTTP/1.1 204 No Content");
+}
+
+/*******-------*******[   Classes   ]*******-------*******/
+class CheckCustom
+{
+    protected static function getConnection()
+    {
+        $settings = include("./bitrix/.settings.php");
+
+        $servername = $settings["connections"]["value"]["default"]["host"];
+        $database = $settings["connections"]["value"]["default"]["database"];
+        $username = $settings["connections"]["value"]["default"]["login"];
+        $password = $settings["connections"]["value"]["default"]["password"];
+
+        if (!extension_loaded('mysqli'))
+        {
+            self::logSupport24("Module mysqli not found", "extension will not be able to disable handlers in DB");
+            exit;
+        }
+
+        $DB = new mysqli($servername, $username, $password, $database);
+
+        if ($DB->connect_error)
+        {
+            self::addLog("Connection MySQLi", $DB->connect_error);
+            exit;
+        }
+
+        return $DB;
+    }
+
+    protected static function sendQuery(string $query)
+    {
+        $DB = self::getConnection();
+
+        $resultQuery = $DB->query($query);
+
+        if (is_bool($resultQuery))
+        {
+            return $resultQuery;
+        }
+
+        $data = $resultQuery->fetch_all();
+        $resultQuery->free();
+
+        return call_user_func_array("array_merge", $data);
+    }
+
+
+    public static function addLog($action, $data):void
+    {
+        $log = date("d/m H:i") . " | {$action}: " . print_r($data, true) . PHP_EOL;
+        $fileLog = "./logSupport24.txt";
+
+        file_put_contents($fileLog, $log, FILE_APPEND);
+    }
+
+
+    # Scanning directory and return all files or those in the filesList
+    private static function existFile(string $dir, array $filesList = []): array
+    {
+        if(!file_exists($dir))
+        {
+            self::addLog("Scanned path not found", $dir);
+            return [];
+        }
+
+        $dirFiles = scandir($dir);
+        $dirFiles = array_diff($dirFiles, array('..', '.'));
+
+        foreach ($filesList as $file)
+        {
+            if(!file_exists($dir . $file))
+            {
+                unset($filesList[$file]);
+
+                self::addLog("Object not found", $dir . $file);
+            }
+        }
+
+        !empty($filesList) ? $result = array_intersect($dirFiles, $filesList) : $result = $dirFiles;
+
+        return array_values($result);
+    }
+
+    private static function renameExternalFiles(string $dir, array $externalFiles, string $selector): void
+    {
+        $extFiles = self::existFile($dir, $externalFiles);
+
+        if(empty($extFiles)) return;
+
+        switch ($selector)
+        {
+            case "off":
+                $rename = fn($file) => rename($dir . $file, $dir . '_bx_' . $file);
+                array_map($rename, $externalFiles);
+
+                $session = fn($file) => $_SESSION['offCustom'][] = $file;
+                array_map($session, $externalFiles);
+
+                self::addLog("Disabled objects in {$dir}", $externalFiles);
+                break;
+
+            case "on":
+                $rename = fn($file) => rename($dir . $file, $dir . mb_substr($file, 4));
+                array_map($rename, $externalFiles);
+
+                $session = fn($file) => $_SESSION['onCustom'][] = mb_substr($file, 4);
+                array_map($session, $externalFiles);
+
+                self::addLog("Enabled objects in {$dir}", $externalFiles);
+                break;
+        }
+    }
+
+    private static function moveExternalModules(string $dir, string $selector): void
+    {
+        $modulesList = self::existFile($dir);
+        $extModules = array();
+
+        foreach ($modulesList as $module)
+        {
+            if (stristr($module, '.') && !is_file($dir . $module)) $extModules[] = $module;
+        }
+
+        if(empty($extModules)) return;
+
+        $tempDir = "./bitrix/modules/_bx_/";
+        $originalDir = "./bitrix/modules/";
+
+        if (!file_exists($tempDir)) mkdir($tempDir, 0777, true);
+
+        $pathModules = array_map(fn($arrModules) => $originalDir . $arrModules, $extModules);
+        $tempPathModules = array_map(fn($arrModules) => $tempDir . $arrModules, $extModules);
+
+        $callback = fn($a, $b) => rename($a, $b);
+
+        switch ($selector)
+        {
+            case "off":
+                array_map($callback, $pathModules, $tempPathModules);
+
+                $_SESSION['offCustom'][] = "ExternalModules";
+
+                self::addLog("Disabled external modules", $extModules);
+                break;
+
+            case "on":
+                array_map($callback, $tempPathModules, $pathModules);
+
+                $_SESSION['onCustom'][] = "ExternalModules";
+
+                self::addLog("Enabled external modules", $extModules);
+                break;
+        }
+    }
+
+    private static function disableEventHandlers(string $handlersID, string $selector): void
+    {
+        $getHandlers = "
+                            SELECT 
+                                ID, TO_MODULE_ID, MESSAGE_ID
+                            FROM 
+                                b_module_to_module 
+                            WHERE 
+                                ID IN ('{$handlersID}')
+        ";
+
+        switch ($selector)
+        {
+            case "off":
+                $offHandlers = "
+                                    UPDATE 
+                                        b_module_to_module 
+                                    SET 
+                                        MESSAGE_ID = CONCAT('_bx_', MESSAGE_ID)
+                                    WHERE 
+                                          ID IN ('{$handlersID}')
+                ";
+
+                $dataHandlers = self::sendQuery($getHandlers);
+                self::sendQuery($offHandlers);
+
+                $_SESSION['offCustom'][] = "eventHandlers";
+
+                self::addLog("Disabled event handlers", $dataHandlers);
+                break;
+
+            case "on":
+                $onHandlers = "
+                                    UPDATE 
+                                        b_module_to_module 
+                                    SET 
+                                        MESSAGE_ID = REPLACE(MESSAGE_ID, '_bx_', '')
+                                    WHERE 
+                                          ID IN ('{$handlersID}')";
+
+                self::sendQuery($onHandlers);
+                $dataHandlers = self::sendQuery($getHandlers);
+
+                $_SESSION['onCustom'][] = "eventHandlers";
+
+                self::addLog("Enabled event handlers", $dataHandlers);
+                break;
+        }
+    }
+
+
+    # Builder
+    public static function operationsPerformer(array $custom, string $selector):void
+    {
+        if (in_array("local", $custom))
+        {
+            $selector === "off" ? $externalFiles = ['local'] : $externalFiles = ['_bx_local'];
+
+            self::renameExternalFiles("./", $externalFiles, $selector);
+        }
+
+        if (in_array("init", $custom))
+        {
+            $selector === "off" ? $externalFiles = ['init.php'] : $externalFiles = ['_bx_init.php'];
+
+            self::renameExternalFiles("./local/php_interface/", $externalFiles, $selector);
+            self::renameExternalFiles("./bitrix/php_interface/", $externalFiles, $selector);
+        }
+
+        if (in_array("eventHandlers", $custom))
+        {
+            $selector === "off" ? $condition = "NOT LIKE('_bx_%')" : $condition = "LIKE('_bx_%')";
+
+            $queryExModules = "SELECT ID FROM b_module_to_module WHERE TO_MODULE_ID LIKE('%.%') AND MESSAGE_ID {$condition}";
+            $resultExModules = self::sendQuery($queryExModules);
+
+            if(!empty($resultExModules))
+            {
+                $handlersID = implode("','", $resultExModules);
+
+                if (empty($_SESSION['backupTable']) && $selector === "off")
+                {
+                    self::backupTable("create");
+                }
+
+                self::disableEventHandlers($handlersID, $selector);
+            }
+        }
+
+        if (in_array("customModules", $custom))
+        {
+            $selector === "off" ? $dir = "./bitrix/modules/" : $dir = "./bitrix/modules/_bx_/";
+
+            self::moveExternalModules($dir, $selector);
+        }
+
+        if (in_array("templateDefault", $custom))
+        {
+            $selector == "off" ? $externalFiles = ['bitrix'] : $externalFiles = ['_bx_bitrix'];
+
+            self::renameExternalFiles("./bitrix/templates/.default/components/", $externalFiles, $selector);
+        }
+
+        if (in_array("templateBitrix24", $custom))
+        {
+            $backup = "./bitrix/templates/_bx_bitrix24.zip";
+            $path = "./bitrix/templates/bitrix24/";
+
+            switch ($selector)
+            {
+                case "off":
+                    $_SESSION['backupArchive'] ?? TemplateBitrix24::createArchive($backup, $path);
+
+                    $resource = "https://raw.githubusercontent.com/nakiamegit/templateBitrix24/main/originalTemplate.txt";
+
+                    $originalTemplate = json_decode(file_get_contents($resource), true);
+                    if(ini_get('allow_url_fopen') != true)
+                    {
+                        $originalTemplate = json_decode(TemplateBitrix24::openFileViaSockets($resource), true);
+                    }
+
+                    $curlTemplate = TemplateBitrix24::recursiveScanDir($path);
+
+                    $compare = TemplateBitrix24::compare($originalTemplate, $curlTemplate);
+
+                    TemplateBitrix24::restore($compare);
+                    break;
+
+                case "on":
+                    TemplateBitrix24::extractArchive($backup, $path);
+                    break;
+
+                default:
+                    self::addLog("Selector passed incorrectly", $selector);
+                    break;
+            }
+        }
+    }
+
+    public static function backupTable(string $action):void
+    {
+        $tableName = "b_module_to_module";
+        $temptTable = "backup_" . $tableName;
+
+        switch ($action)
+        {
+            case "create":
+                $createStructure = "CREATE TABLE {$temptTable}  LIKE {$tableName}";
+                self::sendQuery($createStructure);
+
+                $copyDate = "INSERT INTO {$temptTable} SELECT * FROM {$tableName}";
+                self::sendQuery($copyDate);
+
+                $_SESSION['backupTable'] = "Y";
+
+                self::addLog("Backup created", "{$tableName} => {$temptTable}");
+                break;
+
+            case "restore":
+                $checkTable = "SHOW TABLES LIKE '{$temptTable}'";
+
+                if(empty(self::sendQuery($checkTable)))
+                {
+                    self::addLog("Table {$temptTable} does not exist", "please create the backup");
+                    exit;
+                }
+
+                self::sendQuery("TRUNCATE {$tableName}");
+
+                $queryRestore = "INSERT INTO {$tableName} SELECT * FROM {$temptTable}";
+                self::sendQuery($queryRestore);
+
+                unset($_SESSION['offCustom'][array_search("eventHandlers",$_SESSION['offCustom'])]);
+
+                self::addLog("Restoring table {$temptTable}", "success");
+                break;
+
+            case "delete":
+                $queryDeleteTable = "DROP TABLE {$temptTable}";
+
+                if(self::sendQuery($queryDeleteTable) != false)
+                {
+                    $_SESSION['backupTable'] = NULL;
+                    self::addLog("Delete table", $temptTable);
+                }
+                break;
+        }
+    }
+
+    public static function removeTraces():void
+    {
+        session_destroy();
+
+        self::backupTable("delete");
+
+        if(file_exists("./bitrix/modules/_bx_")) rmdir("./bitrix/modules/_bx_");
+        if(file_exists("./bitrix/templates/_bx_bitrix24.zip")) unlink("./bitrix/templates/_bx_bitrix24.zip");
+        if(file_exists("./logSupport24.txt")) unlink("./logSupport24.txt");
+        if(file_exists("./support24.php")) unlink("./support24.php");
+    }
+}
+
+class TemplateBitrix24 extends CheckCustom
 {
     protected static function recursiveScanDir($dir, &$structure = array(), &$filesInfo = array()): array
     {
         if(!file_exists($dir))
         {
-            CheckCustom::logSupport24("Scanned path not found", $dir);
-            die();
+            CheckCustom::addLog("Scanned path not found", $dir);
+            exit;
         }
 
         $elements = scandir($dir);
@@ -102,7 +521,7 @@ class CheckTemplateBitrix24
     {
         if(!extension_loaded('zip'))
         {
-            CheckCustom::logSupport24("Zip module", "not installed.");
+            CheckCustom::addLog("Zip module", "not installed.");
             return;
         }
 
@@ -115,7 +534,7 @@ class CheckTemplateBitrix24
         {
             if($zip->addFile($file, mb_substr($file, 28)) !== true)
             {
-                CheckCustom::logSupport24("File {$file}", "failed to archive.");
+                CheckCustom::addLog("File {$file}", "failed to archive.");
                 return;
             }
         }
@@ -132,7 +551,7 @@ class CheckTemplateBitrix24
 
         if($zip->extractTo($pathto) !== true)
         {
-            CheckCustom::logSupport24("Archive {$archive}", "failed to unpack.");
+            CheckCustom::addLog("Archive {$archive}", "failed to unpack.");
             return;
         }
 
@@ -153,8 +572,8 @@ class CheckTemplateBitrix24
 
         if(!$fp)
         {
-            CheckCustom::logSupport24("Fsockopen - {$errno}", $errstr);
-            die();
+            CheckCustom::addLog("Fsockopen - {$errno}", $errstr);
+            exit;
         }
 
         $request = "GET {$query} HTTP/1.1\r\n";
@@ -188,10 +607,10 @@ class CheckTemplateBitrix24
         array_map(fn($dir) => mkdir($dir, 0777, true), $exDir['directories']);
 
         array_map(fn($file) => unlink($file), $notExDir['files']);
-            #CheckCustom::logSupport24("Removed files", $notExDir['files']);
+        #CheckCustom::logSupport24("Removed files", $notExDir['files']);
 
         array_map(fn($dir) => self::removeDirectory($dir), $notExDir['directories']);
-            #CheckCustom::logSupport24("Removed directories", $notExDir['directories']);
+        #CheckCustom::logSupport24("Removed directories", $notExDir['directories']);
 
         $files = array_merge($lists['compareStructure']['exist']['files'], $lists['compareFiles']);
 
@@ -213,7 +632,7 @@ class CheckTemplateBitrix24
 
                 if($checkStatus != 200)
                 {
-                    CheckCustom::logSupport24("Recoverable file {$file}", "not found on the server.");
+                    CheckCustom::addLog("Recoverable file {$file}", "not found on the server.");
                     continue;
                 }
 
@@ -235,7 +654,7 @@ class CheckTemplateBitrix24
             {
                 if (@file_get_contents() === false)
                 {
-                    CheckCustom::logSupport24("Recoverable file {$file}", "not found on the server.");
+                    CheckCustom::addLog("Recoverable file {$file}", "not found on the server.");
                     continue;
                 }
 
@@ -248,7 +667,7 @@ class CheckTemplateBitrix24
 
                 if($checkStatus[0] != "HTTP/1.1 200 OK")
                 {
-                    CheckCustom::logSupport24("Recoverable file {$file}", "not found on the server.");
+                    CheckCustom::addLog("Recoverable file {$file}", "not found on the server.");
                     continue;
                 }
 
@@ -259,420 +678,97 @@ class CheckTemplateBitrix24
             #CheckCustom::logSupport24("File {$file}", "restored successfully");
             fclose($curlFile);
         }
-        CheckCustom::logSupport24("Restore template Bitrix24", "completed");
+        CheckCustom::addLog("Restore template Bitrix24", "completed");
     }
 }
 
-class CheckCustom extends CheckTemplateBitrix24
+class SecureData extends CheckCustom
 {
-    public static function logSupport24($action, $data):void
+    public static function auth(string $login, string $password):void
     {
-        $log = date("d/m H:i") . " | {$action}: " . print_r($data, true) . PHP_EOL;
-        $fileLog = "./logSupport24.txt";
+        $query = "
+            SELECT 
+                U.ID, U.LOGIN, U.ACTIVE, U.PASSWORD, U.LOGIN_ATTEMPTS, U.CONFIRM_CODE, U.EMAIL
+            FROM 
+                b_user U 
+                    LEFT JOIN 
+                        b_user_group UG 
+                    ON 
+                        U.ID=UG.USER_ID 
+                            AND 
+                                ((UG.DATE_ACTIVE_FROM IS NULL) OR (UG.DATE_ACTIVE_FROM <= NOW())) 
+                            AND 
+                                ((UG.DATE_ACTIVE_TO IS NULL) OR (UG.DATE_ACTIVE_TO >= NOW()))
+            WHERE 
+                U.LOGIN = '". self::escapeInput($login) ."'
+                    AND 
+                        UG.GROUP_ID = 1 
+                    AND 
+                        U.ACTIVE = 'Y' 
+                    AND 
+                        (EXTERNAL_AUTH_ID IS NULL OR EXTERNAL_AUTH_ID = '')
+			";
 
-        file_put_contents($fileLog, $log, FILE_APPEND);
-    }
+        $data = CheckCustom::sendQuery($query);
 
-    private static function queryDatabase(string $query):array
-    {
-        $settings = include("./bitrix/.settings.php");
+        $hash = $data[3];
+        $hashLength = mb_strlen($hash);
 
-        $servername = $settings["connections"]["value"]["default"]["host"];
-        $database = $settings["connections"]["value"]["default"]["database"];
-        $username = $settings["connections"]["value"]["default"]["login"];
-        $password = $settings["connections"]["value"]["default"]["password"];
-
-        $result = array();
-
-
-        if (!extension_loaded('mysqli'))
+        switch (true)
         {
-            self::logSupport24("Module mysqli not found", "extension will not be able to disable handlers in DB");
-            die();
-        }
-
-        $DB = new mysqli($servername, $username, $password, $database);
-
-        if ($DB->connect_error)
-        {
-            self::logSupport24("Connection MySQLi", $DB->connect_error);
-            die();
-        }
-
-        $resultQuery = $DB->query($query);
-
-        if (!is_bool($resultQuery))
-        {
-            $result = $resultQuery->fetch_all();
-            $resultQuery->free();
-        }
-
-        $DB->close();
-
-        return $result;
-    }
-
-    public static function backupTable(string $action):void
-    {
-        $tableName = "b_module_to_module";
-        $temptTable = "backup_" . $tableName;
-
-        switch ($action)
-        {
-            case "create":
-                $queryCreatStructure = "CREATE TABLE {$temptTable}  LIKE {$tableName}";
-                self::queryDatabase($queryCreatStructure);
-
-                $queryCopyDate = "INSERT INTO {$temptTable} SELECT * FROM {$tableName}";
-                self::queryDatabase($queryCopyDate);
-
-                $_SESSION['backupTable'] = "Y";
-
-                self::logSupport24("Backup created", "{$tableName} => {$temptTable}");
+            case ($hashLength > 100):
+                $salt = mb_substr($hash, 3, 16);
+                $hashEntered = crypt($password, '$6$' . $salt . '$');
                 break;
 
-            case "restore":
-                $queryCheckTable = "SHOW TABLES LIKE '{$temptTable}'";
-                if(empty(self::queryDatabase($queryCheckTable)))
-                {
-                    self::logSupport24("Table {$temptTable} does not exist", "please create the backup");
-                    die();
-                }
-
-                $queryTruncate = "TRUNCATE {$tableName}";
-                self::queryDatabase($queryTruncate);
-
-                $queryRestore = "INSERT INTO {$tableName} SELECT * FROM {$temptTable}";
-                self::queryDatabase($queryRestore);
-
-                unset($_SESSION['offCustom'][array_search("EventHandlers",$_SESSION['offCustom'])]);
-
-                self::logSupport24("Restoring table {$temptTable}", "success");
+            case ($hashLength > 32):
+                $salt = mb_substr($hash, 0, -32);
+                $hashEntered = $salt.md5($salt . $password);
                 break;
 
-            case "delete":
-                $queryDeleteTable = "DROP TABLE {$temptTable}";
+            default:
+                $hashEntered = md5($password);
+        }
 
-                if(self::queryDatabase($queryDeleteTable) != false)
-                {
-                    $_SESSION['backupTable'] = NULL;
-                    self::logSupport24("Delete table", $temptTable);
-                }
-                break;
+        if(function_exists('hash_equals') && hash_equals($hash, $hashEntered))
+        {
+            setcookie('login', $_COOKIE['login'] = $login);
+            setcookie('hash', $_COOKIE['hash'] = md5($_COOKIE['login']));
+        }
+        elseif ($hash == $hashEntered)
+        {
+            setcookie('login', $_COOKIE['login'] = $login);
+            setcookie('hash', $_COOKIE['hash'] = md5($_COOKIE['login']));
+        }
+        else
+        {
+            CheckCustom::addLog("Authorization attempt", $_SERVER['REMOTE_ADDR']);
+
+            header('HTTP/1.0 403 Forbidden', true, 403);
+            exit;
         }
     }
 
-    public static function removeTraces():void
+    public static function checkAuth():void
     {
-        session_destroy();
-
-        self::backupTable("delete");
-
-        if(file_exists("./bitrix/modules/_bx_")) rmdir("./bitrix/modules/_bx_");
-        if(file_exists("./bitrix/templates/_bx_bitrix24.zip")) unlink("./bitrix/templates/_bx_bitrix24.zip");
-        if(file_exists("./logSupport24.txt")) unlink("./logSupport24.txt");
-        if(file_exists("./support24.php")) unlink("./support24.php");
+        if (isset($_SESSION['SESS_AUTH']) && $_SESSION['SESS_AUTH']['AUTHORIZED'] == 'Y' && $_SESSION["SESS_AUTH"]["ADMIN"] === true)
+        {
+            setcookie('login', $_COOKIE['login'] = $_SESSION['SESS_AUTH']['LOGIN']);
+            setcookie('hash', $_COOKIE['hash'] = md5($_COOKIE['login']));
+        }
+        else
+        {
+            header('HTTP/1.0 403 Forbidden', true, 403);
+            exit;
+        }
     }
 
-    # Scanning directory and return all files or those in the filesList
-    private static function scanDir(string $dir, array $filesList = array()): array
+    public static function escapeInput(string $string):string
     {
-        if(!file_exists($dir))
-        {
-            self::logSupport24("Scanned path not found", $dir);
-            return array();
-        }
+        $newString = strip_tags($string);
+        $newString = htmlentities($string, ENT_QUOTES, 'UTF-8');
+        $newString = mysqli_real_escape_string(CheckCustom::getConnection(), $string);
 
-        $dirFiles = scandir($dir);
-
-        foreach ($filesList as $file)
-        {
-            if(!file_exists($dir . $file))
-            {
-                unset($filesList[$file]);
-
-                self::logSupport24("Object not found", $dir . $file);
-            }
-        }
-
-        $dirFiles = array_diff($dirFiles, array('..', '.'));
-
-        !empty($filesList) ? $result = array_intersect($dirFiles, $filesList) : $result = $dirFiles;
-
-        return array_values($result);
+        return $newString;
     }
-
-    private static function renameExternalFiles(string $dir, array $externalFiles, string $selector): void
-    {
-        $extFiles = self::scanDir($dir, $externalFiles);
-
-        if(empty($extFiles)) return;
-
-        switch ($selector)
-        {
-            case "off":
-                $rename = fn($file) => rename($dir . $file, $dir . '_bx_' . $file);
-                array_map($rename, $externalFiles);
-
-                $session = fn($file) => $_SESSION['offCustom'][] = $file;
-                array_map($session, $externalFiles);
-
-                self::logSupport24("Disabled objects in {$dir}", $externalFiles);
-                break;
-
-            case "on":
-                $rename = fn($file) => rename($dir . $file, $dir . mb_substr($file, 4));
-                array_map($rename, $externalFiles);
-
-                $session = fn($file) => $_SESSION['onCustom'][] = mb_substr($file, 4);
-                array_map($session, $externalFiles);
-
-                self::logSupport24("Enabled objects in {$dir}", $externalFiles);
-                break;
-        }
-    }
-
-    private static function moveExternalModules(string $dir, array $extModules, string $selector): void
-    {
-        if(empty($extModules))
-        {
-            self::logSupport24("External modules", "not found");
-            return;
-        }
-
-        $tempDir = "./bitrix/modules/_bx_/";
-        $originalDir = "./bitrix/modules/";
-
-        if (!file_exists($tempDir)) mkdir($tempDir, 0777, true);
-
-        $extModules = self::scanDir($dir, $extModules);
-
-        $pathModules = array_map(fn($arrModules) => $originalDir . $arrModules, $extModules);
-        $tempPathModules = array_map(fn($arrModules) => $tempDir . $arrModules, $extModules);
-
-        $callback = fn($a, $b) => rename($a, $b);
-
-        switch ($selector)
-        {
-            case "off":
-                array_map($callback, $pathModules, $tempPathModules);
-
-                $_SESSION['offCustom'][] = "ExternalModules";
-
-                self::logSupport24("Disabled external modules", $extModules);
-                break;
-
-            case "on":
-                array_map($callback, $tempPathModules, $pathModules);
-
-                $_SESSION['onCustom'][] = "ExternalModules";
-
-                self::logSupport24("Enabled external modules", $extModules);
-                break;
-        }
-    }
-
-    private static function disableEventHandlers(string $handlersID, string $selector): void
-    {
-        $queryGetDataHandlers = "
-                            SELECT 
-                                ID, TO_MODULE_ID, MESSAGE_ID
-                            FROM 
-                                b_module_to_module 
-                            WHERE 
-                                ID IN ('{$handlersID}')
-        ";
-
-        switch ($selector)
-        {
-            case "off":
-                $queryDisableHandlers = "
-                                    UPDATE 
-                                        b_module_to_module 
-                                    SET 
-                                        MESSAGE_ID = CONCAT('_bx_', MESSAGE_ID)
-                                    WHERE 
-                                          ID IN ('{$handlersID}')
-                ";
-
-                $dataHandlers = self::queryDatabase($queryGetDataHandlers);
-                self::queryDatabase($queryDisableHandlers);
-
-                $_SESSION['offCustom'][] = "EventHandlers";
-
-                self::logSupport24("Disabled event handlers", $dataHandlers);
-                break;
-
-            case "on":
-                $queryDisableHandlers = "
-                                    UPDATE 
-                                        b_module_to_module 
-                                    SET 
-                                        MESSAGE_ID = REPLACE(MESSAGE_ID, '_bx_', '')
-                                    WHERE 
-                                          ID IN ('{$handlersID}')";
-
-                self::queryDatabase($queryDisableHandlers);
-                $dataHandlers = self::queryDatabase($queryGetDataHandlers);
-
-                $_SESSION['onCustom'][] = "EventHandlers";
-
-                self::logSupport24("Enabled event handlers", $dataHandlers);
-                break;
-        }
-    }
-
-    # Method call builder
-    public static function operationsPerformer(array $custom, string $selector):void
-    {
-        if (in_array("local", $custom))
-        {
-            $selector === "off" ? $externalFiles = ['local'] : $externalFiles = ['_bx_local'];
-
-            self::renameExternalFiles("./", $externalFiles, $selector);
-        }
-
-        if (in_array("init", $custom))
-        {
-            switch ($selector)
-            {
-                case "off":
-                    $externalFiles = ['init.php'];
-                    $selective = "AND MESSAGE_ID NOT LIKE('_bx_%')";
-                    break;
-
-                case "on":
-                    $externalFiles = ['_bx_init.php'];
-                    $selective = "AND MESSAGE_ID LIKE('_bx_%')";
-                    break;
-
-                default:
-                    self::logSupport24("Selector passed incorrectly", $selector);
-                    break;
-            }
-
-            $queryExModules = "SELECT ID FROM b_module_to_module WHERE TO_MODULE_ID LIKE('%.%') {$selective}";
-            $resultExModules = self::queryDatabase($queryExModules);
-
-            if(!empty($resultExModules))
-            {
-                $outArray = call_user_func_array("array_merge", $resultExModules);
-                $handlersID = implode("','", $outArray);
-
-                if (empty($_SESSION['backupTable']) && $selector === "off")
-                {
-                    self::backupTable("create");
-                }
-
-
-                self::disableEventHandlers($handlersID, $selector);
-            }
-
-            self::renameExternalFiles("./local/php_interface/", $externalFiles, $selector);
-            self::renameExternalFiles("./bitrix/php_interface/", $externalFiles, $selector);
-        }
-
-        if (in_array("customModules", $custom))
-        {
-            $selector === "off" ? $dir = "./bitrix/modules/" : $dir = "./bitrix/modules/_bx_/";
-
-            $modulesList = self::scanDir($dir);
-            $extModules = array();
-
-            foreach ($modulesList as $module)
-            {
-                if (stristr($module, '.') && !is_file($dir . $module)) $extModules[] = $module;
-            }
-
-            self::moveExternalModules($dir, $extModules, $selector);
-        }
-
-        if (in_array("templateDefault", $custom))
-        {
-            $selector == "off" ? $externalFiles = ['bitrix'] : $externalFiles = ['_bx_bitrix'];
-
-            self::renameExternalFiles("./bitrix/templates/.default/components/", $externalFiles, $selector);
-        }
-
-        if (in_array("templateBitrix24", $custom))
-        {
-            $backup = "./bitrix/templates/_bx_bitrix24.zip";
-            $path = "./bitrix/templates/bitrix24/";
-
-            switch ($selector)
-            {
-                case "off":
-                    $_SESSION['backupArchive'] ?? CheckTemplateBitrix24::createArchive($backup, $path);
-
-                    $resource = "https://raw.githubusercontent.com/nakiamegit/templateBitrix24/main/originalTemplate.txt";
-
-                    $originalTemplate = json_decode(file_get_contents($resource), true);
-                    if(ini_get('allow_url_fopen') != true)
-                    {
-                        $originalTemplate = json_decode(checkTemplateBitrix24::openFileViaSockets($resource), true);
-                    }
-
-                    $curlTemplate = CheckTemplateBitrix24::recursiveScanDir($path);
-
-                    $compare = CheckTemplateBitrix24::compare($originalTemplate, $curlTemplate);
-
-                    CheckTemplateBitrix24::restore($compare);
-                    break;
-
-                case "on":
-                    CheckTemplateBitrix24::extractArchive($backup, $path);
-                    break;
-
-                default:
-                    self::logSupport24("Selector passed incorrectly", $selector);
-                    break;
-            }
-        }
-    }
-}
-
-/********---[Work area]---********/
-if(!empty($_GET['custom']) && !empty($_GET['selector']))
-{
-    CheckCustom::operationsPerformer($_GET['custom'], $_GET['selector']);
-}
-
-if($_GET['backupTable'] === "restore")
-{
-    CheckCustom::backupTable("restore");
-}
-
-if($_GET['delFile'] === 'Y')
-{
-    CheckCustom::removeTraces();
-}
-
-if($_GET['checkDisabledCustom'] === 'Y')
-{
-    if(empty($_SESSION['offCustom']))
-    {
-        header("HTTP/1.1 404 Not Found");
-    }
-    elseif(!empty($_SESSION['onCustom']))
-    {
-        $_SESSION['offCustom'] = array_diff(array_unique($_SESSION['offCustom']), array_unique($_SESSION['onCustom']));
-        $_SESSION['onCustom'] = array();
-
-        print_r($_SESSION['offCustom']);
-    }
-}
-
-if($_GET['checkBackupTable'] === 'Y')
-{
-    empty($_SESSION['backupTable']) ? header("HTTP/1.1 404 Not Found") : print_r($_SESSION['backupTable']);
-}
-
-if($_GET['zip'] === 'Y' && !extension_loaded('zip'))
-{
-    header("HTTP/1.1 204 No Content");
-}
-
-if($_GET['mysqli'] === 'Y' && !extension_loaded('mysqli'))
-{
-    header("HTTP/1.1 204 No Content");
 }
