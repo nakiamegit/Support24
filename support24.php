@@ -4,19 +4,12 @@ session_start();
 header("Access-Control-Allow-Origin: *");
 
 /*******-------*******[   Authentication  ]*******-------*******/
-/*if(!isset($_COOKIE['UNIQUE_ID']) && !empty($_POST['UNIQUE_ID']))
-{
-    setcookie("UNIQUE_ID", $_POST['UNIQUE_ID'], time()+3600);
-}*/
 if(!empty($_POST['login']) && !empty($_POST['password']))
 {
     SecureData::auth($_POST['login'], $_POST['password']);
 }
 
-if (!isset($_COOKIE['hash']) || $_COOKIE['hash'] != md5($_COOKIE['login']))
-{
-    SecureData::checkAuth();
-}
+SecureData::checkAuth();
 
 /*******-------*******[   Work area   ]*******-------*******/
 if(!empty($_GET['custom']) && !empty($_GET['selector']))
@@ -24,9 +17,9 @@ if(!empty($_GET['custom']) && !empty($_GET['selector']))
     CheckCustom::operationsPerformer($_GET['custom'], $_GET['selector']);
 }
 
-if($_GET['backupTable'] === "restore")
+if($_GET['backupTable'] === 'restore')
 {
-    CheckCustom::backupTable("restore");
+    CheckCustom::backupTable('restore');
 }
 
 if($_GET['delFile'] === 'Y')
@@ -108,7 +101,7 @@ class CheckCustom
         $data = $resultQuery->fetch_all();
         $resultQuery->free();
 
-        return call_user_func_array("array_merge", $data);
+        return $data;
     }
 
 
@@ -228,7 +221,7 @@ class CheckCustom
                             FROM 
                                 b_module_to_module 
                             WHERE 
-                                ID IN ('{$handlersID}')
+                                ID IN ($handlersID)
         ";
 
         switch ($selector)
@@ -240,7 +233,7 @@ class CheckCustom
                                     SET 
                                         MESSAGE_ID = CONCAT('_bx_', MESSAGE_ID)
                                     WHERE 
-                                          ID IN ('{$handlersID}')
+                                          ID IN ($handlersID)
                 ";
 
                 $dataHandlers = self::sendQuery($getHandlers);
@@ -258,7 +251,7 @@ class CheckCustom
                                     SET 
                                         MESSAGE_ID = REPLACE(MESSAGE_ID, '_bx_', '')
                                     WHERE 
-                                          ID IN ('{$handlersID}')";
+                                          ID IN ($handlersID)";
 
                 self::sendQuery($onHandlers);
                 $dataHandlers = self::sendQuery($getHandlers);
@@ -298,7 +291,8 @@ class CheckCustom
 
             if(!empty($resultExModules))
             {
-                $handlersID = implode("','", $resultExModules);
+                $outArray = call_user_func_array("array_merge", $resultExModules);
+                $handlersID = implode(",", $outArray);
 
                 if (empty($_SESSION['backupTable']) && $selector === "off")
                 {
@@ -711,7 +705,7 @@ class SecureData extends CheckCustom
 
         $data = CheckCustom::sendQuery($query);
 
-        $hash = $data[3];
+        $hash = $data[0][3];
         $hashLength = mb_strlen($hash);
 
         switch (true)
@@ -732,13 +726,15 @@ class SecureData extends CheckCustom
 
         if(function_exists('hash_equals') && hash_equals($hash, $hashEntered))
         {
-            setcookie('login', $_COOKIE['login'] = $login);
-            setcookie('hash', $_COOKIE['hash'] = md5($_COOKIE['login']));
+            $_SESSION['SESS_AUTH']['AUTHORIZED'] = 'Y';
+            $_SESSION['SESS_AUTH']['ADMIN'] = true;
+            $_SESSION['SESS_AUTH']['LIVE_AUTH'] = time() + 3600;
         }
         elseif ($hash == $hashEntered)
         {
-            setcookie('login', $_COOKIE['login'] = $login);
-            setcookie('hash', $_COOKIE['hash'] = md5($_COOKIE['login']));
+            $_SESSION['SESS_AUTH']['AUTHORIZED'] = 'Y';
+            $_SESSION['SESS_AUTH']['ADMIN'] = true;
+            $_SESSION['SESS_AUTH']['LIVE_AUTH'] = time() + 3600;
         }
         else
         {
@@ -751,12 +747,9 @@ class SecureData extends CheckCustom
 
     public static function checkAuth():void
     {
-        if (isset($_SESSION['SESS_AUTH']) && $_SESSION['SESS_AUTH']['AUTHORIZED'] == 'Y' && $_SESSION["SESS_AUTH"]["ADMIN"] === true)
-        {
-            setcookie('login', $_COOKIE['login'] = $_SESSION['SESS_AUTH']['LOGIN']);
-            setcookie('hash', $_COOKIE['hash'] = md5($_COOKIE['login']));
-        }
-        else
+        if ($_SESSION['SESS_AUTH']['AUTHORIZED'] !== 'Y'
+            || $_SESSION["SESS_AUTH"]["ADMIN"] !== true
+            || $_SESSION['SESS_AUTH']['LIVE_AUTH'] < time())
         {
             header('HTTP/1.0 403 Forbidden', true, 403);
             exit;
